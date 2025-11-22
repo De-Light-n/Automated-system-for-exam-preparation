@@ -14,7 +14,7 @@ export const hashPassword = async (password: string): Promise<string> => {
 export const comparePassword = async (password: string, hashedPassword: string): Promise<boolean> => {
   return await bcrypt.compare(password, hashedPassword);
 };
-
+ 
 export const calculateLevel = (xp: number): string => {
   if (xp > 3000) return 'Професор';
   if (xp > 1500) return 'Магістр';

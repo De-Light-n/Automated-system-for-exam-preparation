@@ -133,6 +133,7 @@ const App: React.FC = () => {
       }
     }
   };
+  
 
   const handleFlashcardComplete = async (score: number) => {
     addXP(score * 10);

@@ -160,8 +160,8 @@ Close Issue
 2 SP  = 2-4 год   - Невеликий feature, простий компонент
 3 SP  = 4-6 год   - Середній feature, кілька файлів
 5 SP  = 1 день    - Складний компонент, багато логіки
-8 SP  = 2 дні     - Great feature, backend + frontend
-13 SP = 3-5 днів  - Велика фіча, multiple components
+8 SP  = 2 дні     - Великий feature, backend + frontend
+13 SP = 3-5 днів  - Велика фіча, багато компонентів
 21 SP = 1 тиждень - Epic, потребує дизайну та планування
 ```
 

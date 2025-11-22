@@ -16,7 +16,7 @@ async function callGrokAPI(messages: any[], temperature: number = 0.7, responseF
   if (responseFormat) {
     requestBody.response_format = responseFormat;
   }
-
+ 
   console.log('🤖 Calling Grok via OpenRouter...', { model: MODEL_NAME, messageCount: messages.length });
 
   try {

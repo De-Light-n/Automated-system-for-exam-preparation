@@ -32,7 +32,7 @@ async function callGrokAPI(messages: any[], temperature: number = 0.7, responseF
   const data = await response.json();
   return data.choices[0].message.content;
 }
-
+ 
 export const processContent = async (text: string, title: string): Promise<Omit<StudyMaterial, 'id' | 'createdAt'>> => {
   
   const systemPrompt = `Ти - експертний освітній AI. Проаналізуй текст конспекту українською мовою.

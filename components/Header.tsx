@@ -1,16 +1,18 @@
 import React, { useState } from 'react';
 import { UserStats } from '../types';
-import { GraduationCap, Trophy, Flame, BookOpen, ChevronDown, LogOut, LogIn } from 'lucide-react';
+import { GraduationCap, Flame, BookOpen, ChevronDown, LogOut, LogIn, User } from 'lucide-react';
 
 interface HeaderProps {
   stats: UserStats;
   goHome: () => void;
   isAuthenticated?: boolean;
+  userName?: string;
+  userAvatar?: string;
   onLogin?: () => void;
   onLogout?: () => void;
 }
 
-export const Header: React.FC<HeaderProps> = ({ stats, goHome, isAuthenticated, onLogin, onLogout }) => {
+export const Header: React.FC<HeaderProps> = ({ stats, goHome, isAuthenticated, userName, userAvatar, onLogin, onLogout }) => {
   const [showDropdown, setShowDropdown] = useState(false);
   const progressPercent = (stats.xp % 1000) / 10; // Assuming 1000 XP per level
 
@@ -27,87 +29,135 @@ export const Header: React.FC<HeaderProps> = ({ stats, goHome, isAuthenticated, 
         </div>
 
         <div className="flex items-center gap-3 sm:gap-6">
-           {/* Streak */}
-           <div className="flex items-center gap-1.5 px-3 py-1.5 bg-orange-50 rounded-full border border-orange-100" title="Днів підряд">
-            <Flame className="w-4 h-4 fill-orange-500 text-orange-500" />
-            <span className="text-orange-700 font-bold text-sm">{stats.streak}</span>
-          </div>
-
-          {/* Level & XP */}
-          <div className="hidden sm:flex flex-col min-w-[140px]">
-            <div className="flex justify-between text-[10px] uppercase font-bold text-slate-400 mb-1 tracking-wider">
-              <span>{stats.level}</span>
-              <span>{stats.xp} XP</span>
-            </div>
-            <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden shadow-inner">
-              <div 
-                className="bg-gradient-to-r from-primary to-accent h-full rounded-full transition-all duration-1000 ease-out relative" 
-                style={{ width: `${progressPercent}%` }}
-              >
-                <div className="absolute inset-0 bg-white/30 w-full h-full animate-[shimmer_2s_infinite]"></div>
+          {/* Level & XP - Only show for authenticated users */}
+          {isAuthenticated && (
+            <>
+              <div className="hidden sm:flex flex-col min-w-[140px]">
+                <div className="flex justify-between text-[10px] uppercase font-bold text-slate-400 mb-1 tracking-wider">
+                  <span>{stats.level}</span>
+                  <span>{stats.xp} XP</span>
+                </div>
+                <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden shadow-inner">
+                  <div 
+                    className="bg-gradient-to-r from-primary to-accent h-full rounded-full transition-all duration-1000 ease-out relative" 
+                    style={{ width: `${progressPercent}%` }}
+                  >
+                    <div className="absolute inset-0 bg-white/30 w-full h-full animate-[shimmer_2s_infinite]"></div>
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
 
-          <div className="h-8 w-px bg-slate-200 hidden sm:block"></div>
+              <div className="h-8 w-px bg-slate-200 hidden sm:block"></div>
+            </>
+          )}
 
-          {/* Profile Dropdown */}
+          {/* User Profile with Avatar */}
           <div className="relative">
             <button 
               onClick={() => setShowDropdown(!showDropdown)}
-              className="p-2 hover:bg-slate-100 rounded-full text-slate-400 hover:text-secondary transition-colors relative group"
+              className="flex items-center gap-2 hover:bg-slate-100 rounded-full pr-3 pl-1 py-1 transition-colors group"
             >
-              <Trophy className="w-5 h-5" />
-              <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white"></span>
-              <ChevronDown className={`w-3 h-3 absolute -bottom-1 -right-1 transition-transform ${showDropdown ? 'rotate-180' : ''}`} />
+              {/* Avatar */}
+              <div className="w-8 h-8 rounded-full overflow-hidden bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-md">
+                {userAvatar ? (
+                  <img 
+                    src={userAvatar} 
+                    alt={userName || 'User'} 
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <User className="w-5 h-5 text-white" />
+                )}
+              </div>
+              
+              {/* Username (hidden on small screens) */}
+              <span className="hidden md:block text-sm font-medium text-slate-700 group-hover:text-slate-900">
+                {userName || 'Гість'}
+              </span>
+              
+              <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${showDropdown ? 'rotate-180' : ''}`} />
             </button>
 
             {showDropdown && (
               <>
                 <div className="fixed inset-0 z-40" onClick={() => setShowDropdown(false)}></div>
-                <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden z-50">
+                <div className="absolute right-0 top-full mt-2 w-64 bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+                  {/* User Info Section */}
+                  <div className="p-4 bg-gradient-to-br from-primary/5 to-accent/5 border-b border-slate-100">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 rounded-full overflow-hidden bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-lg">
+                        {userAvatar ? (
+                          <img 
+                            src={userAvatar} 
+                            alt={userName || 'User'} 
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <User className="w-6 h-6 text-white" />
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-bold text-slate-900 truncate">
+                          {userName || 'Гість'}
+                        </p>
+                        <p className="text-xs text-slate-500">
+                          {stats.level} • {stats.xp} XP
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Stats Section */}
                   <div className="p-3">
                     <div className="space-y-2">
-                      <div className="flex items-center justify-between px-2 py-1">
+                      <div className="flex items-center justify-between px-2 py-1.5 hover:bg-slate-50 rounded-lg transition-colors">
                         <div className="flex items-center gap-2">
-                          <BookOpen className="w-4 h-4 text-primary" />
-                          <span className="text-sm text-slate-700">Карток</span>
+                          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                            <BookOpen className="w-4 h-4 text-primary" />
+                          </div>
+                          <span className="text-sm text-slate-700">Вивчено карток</span>
                         </div>
                         <span className="text-sm font-bold text-slate-900">{stats.cardsLearned}</span>
                       </div>
-                      <div className="flex items-center justify-between px-2 py-1">
+                      <div className="flex items-center justify-between px-2 py-1.5 hover:bg-slate-50 rounded-lg transition-colors">
                         <div className="flex items-center gap-2">
-                          <Trophy className="w-4 h-4 text-accent" />
-                          <span className="text-sm text-slate-700">Тестів</span>
+                          <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center">
+                            <BookOpen className="w-4 h-4 text-accent" />
+                          </div>
+                          <span className="text-sm text-slate-700">Пройдено тестів</span>
                         </div>
                         <span className="text-sm font-bold text-slate-900">{stats.testsPassed}</span>
                       </div>
                     </div>
                   </div>
 
-                  {isAuthenticated && onLogout && (
-                    <div className="p-2 border-t border-slate-100">
+                  {/* Actions Section */}
+                  <div className="p-2 border-t border-slate-100">
+                    {isAuthenticated && onLogout ? (
                       <button
-                        onClick={() => { onLogout(); setShowDropdown(false); }}
-                        className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                        onClick={(e) => { 
+                          e.stopPropagation();
+                          setShowDropdown(false);
+                          onLogout();
+                        }}
+                        className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors font-medium"
                       >
                         <LogOut className="w-4 h-4" />
-                        Вийти
+                        Вийти з акаунта
                       </button>
-                    </div>
-                  )}
-                  
-                  {!isAuthenticated && onLogin && (
-                    <div className="p-2 border-t border-slate-100">
+                    ) : onLogin ? (
                       <button
-                        onClick={() => { onLogin(); setShowDropdown(false); }}
-                        className="w-full flex items-center gap-2 px-3 py-2 text-sm text-primary hover:bg-primary/5 rounded-lg transition-colors font-medium"
+                        onClick={() => { 
+                          onLogin(); 
+                          setShowDropdown(false); 
+                        }}
+                        className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-primary hover:bg-primary/5 rounded-lg transition-colors font-medium"
                       >
                         <LogIn className="w-4 h-4" />
                         Увійти
                       </button>
-                    </div>
-                  )}
+                    ) : null}
+                  </div>
                 </div>
               </>
             )}

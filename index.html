@@ -4,44 +4,47 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>ExamNinja - Розумна підготовка</title>
-    
+
     <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;700;800&display=swap" rel="stylesheet">
-    
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;700;800&display=swap"
+      rel="stylesheet"
+    />
+
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
       tailwind.config = {
         theme: {
           extend: {
             fontFamily: {
-              sans: ['Inter', 'sans-serif'],
-              heading: ['Outfit', 'sans-serif'],
+              sans: ["Inter", "sans-serif"],
+              heading: ["Outfit", "sans-serif"],
             },
             colors: {
-              primary: '#4f46e5', // Indigo 600 - Deep & Professional
-              primaryLight: '#818cf8',
-              secondary: '#db2777', // Pink 600
-              accent: '#7c3aed', // Violet 600
-              background: '#f1f5f9', // Slate 100
-              surface: '#ffffff',
+              primary: "#4f46e5", // Indigo 600 - Deep & Professional
+              primaryLight: "#818cf8",
+              secondary: "#db2777", // Pink 600
+              accent: "#7c3aed", // Violet 600
+              background: "#f1f5f9", // Slate 100
+              surface: "#ffffff",
             },
             animation: {
-              'spin-slow': 'spin 3s linear infinite',
-              'bounce-slow': 'bounce 3s infinite',
-              'float': 'float 6s ease-in-out infinite',
-              'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+              "spin-slow": "spin 3s linear infinite",
+              "bounce-slow": "bounce 3s infinite",
+              float: "float 6s ease-in-out infinite",
+              "pulse-slow": "pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite",
             },
             keyframes: {
               float: {
-                '0%, 100%': { transform: 'translateY(0)' },
-                '50%': { transform: 'translateY(-10px)' },
-              }
-            }
+                "0%, 100%": { transform: "translateY(0)" },
+                "50%": { transform: "translateY(-10px)" },
+              },
+            },
           },
         },
-      }
+      };
     </script>
     <style>
       /* Custom scrollbar for webkit */
@@ -50,26 +53,29 @@
         height: 6px;
       }
       ::-webkit-scrollbar-track {
-        background: transparent; 
+        background: transparent;
       }
       ::-webkit-scrollbar-thumb {
-        background: #cbd5e1; 
+        background: #cbd5e1;
         border-radius: 10px;
       }
       ::-webkit-scrollbar-thumb:hover {
-        background: #94a3b8; 
+        background: #94a3b8;
       }
       .perspective {
         perspective: 1000px;
+        perspective-origin: center center;
       }
       .backface-hidden {
         backface-visibility: hidden;
+        -webkit-backface-visibility: hidden;
       }
       .rotate-y-180 {
         transform: rotateY(180deg);
       }
       .preserve-3d {
         transform-style: preserve-3d;
+        transform-origin: center center;
       }
       .glass {
         background: rgba(255, 255, 255, 0.7);
@@ -85,24 +91,26 @@
         scrollbar-width: none;
       }
     </style>
-  <script type="importmap">
-{
-  "imports": {
-    "react/": "https://aistudiocdn.com/react@^19.2.0/",
-    "react": "https://aistudiocdn.com/react@^19.2.0",
-    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.30.0",
-    "lucide-react": "https://aistudiocdn.com/lucide-react@^0.554.0",
-    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
-    "pdfjs-dist": "https://esm.sh/pdfjs-dist@3.11.174",
-    "mammoth": "https://esm.sh/mammoth@1.6.0",
-    "jszip": "https://esm.sh/jszip@3.10.1"
-  }
-}
-</script>
-<link rel="stylesheet" href="/index.css">
-</head>
-  <body class="bg-background text-slate-800 font-sans antialiased min-h-screen selection:bg-primary/20 selection:text-primary">
+    <script type="importmap">
+      {
+        "imports": {
+          "react/": "https://aistudiocdn.com/react@^19.2.0/",
+          "react": "https://aistudiocdn.com/react@^19.2.0",
+          "@google/genai": "https://aistudiocdn.com/@google/genai@^1.30.0",
+          "lucide-react": "https://aistudiocdn.com/lucide-react@^0.554.0",
+          "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+          "pdfjs-dist": "https://esm.sh/pdfjs-dist@3.11.174",
+          "mammoth": "https://esm.sh/mammoth@1.6.0",
+          "jszip": "https://esm.sh/jszip@3.10.1"
+        }
+      }
+    </script>
+    <link rel="stylesheet" href="/index.css" />
+  </head>
+  <body
+    class="bg-background text-slate-800 font-sans antialiased min-h-screen selection:bg-primary/20 selection:text-primary"
+  >
     <div id="root"></div>
-  <script type="module" src="/index.tsx"></script>
-</body>
+    <script type="module" src="/index.tsx"></script>
+  </body>
 </html>

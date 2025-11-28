@@ -1,6 +1,14 @@
-import React, { useState } from 'react';
-import { UserStats } from '../types';
-import { GraduationCap, Flame, BookOpen, ChevronDown, LogOut, LogIn, User } from 'lucide-react';
+import React, { useState } from "react";
+import { UserStats } from "../types";
+import {
+  GraduationCap,
+  Flame,
+  BookOpen,
+  ChevronDown,
+  LogOut,
+  LogIn,
+  User,
+} from "lucide-react";
 
 interface HeaderProps {
   stats: UserStats;
@@ -12,14 +20,25 @@ interface HeaderProps {
   onLogout?: () => void;
 }
 
-export const Header: React.FC<HeaderProps> = ({ stats, goHome, isAuthenticated, userName, userAvatar, onLogin, onLogout }) => {
+export const Header: React.FC<HeaderProps> = ({
+  stats,
+  goHome,
+  isAuthenticated,
+  userName,
+  userAvatar,
+  onLogin,
+  onLogout,
+}) => {
   const [showDropdown, setShowDropdown] = useState(false);
   const progressPercent = (stats.xp % 1000) / 10; // Assuming 1000 XP per level
 
   return (
     <header className="sticky top-4 z-50 px-4 mb-4">
       <div className="max-w-7xl mx-auto glass rounded-2xl shadow-lg shadow-slate-200/50 px-4 py-3 flex items-center justify-between transition-all hover:shadow-xl hover:shadow-slate-200/60">
-        <div className="flex items-center gap-3 cursor-pointer group" onClick={goHome}>
+        <div
+          className="flex items-center gap-3 cursor-pointer group"
+          onClick={goHome}
+        >
           <div className="bg-gradient-to-br from-primary to-accent p-2 rounded-xl shadow-md group-hover:scale-105 transition-transform">
             <GraduationCap className="w-5 h-5 text-white" />
           </div>
@@ -38,8 +57,8 @@ export const Header: React.FC<HeaderProps> = ({ stats, goHome, isAuthenticated, 
                   <span>{stats.xp} XP</span>
                 </div>
                 <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden shadow-inner">
-                  <div 
-                    className="bg-gradient-to-r from-primary to-accent h-full rounded-full transition-all duration-1000 ease-out relative" 
+                  <div
+                    className="bg-gradient-to-r from-primary to-accent h-full rounded-full transition-all duration-1000 ease-out relative"
                     style={{ width: `${progressPercent}%` }}
                   >
                     <div className="absolute inset-0 bg-white/30 w-full h-full animate-[shimmer_2s_infinite]"></div>
@@ -53,43 +72,50 @@ export const Header: React.FC<HeaderProps> = ({ stats, goHome, isAuthenticated, 
 
           {/* User Profile with Avatar */}
           <div className="relative">
-            <button 
+            <button
               onClick={() => setShowDropdown(!showDropdown)}
               className="flex items-center gap-2 hover:bg-slate-100 rounded-full pr-3 pl-1 py-1 transition-colors group"
             >
               {/* Avatar */}
               <div className="w-8 h-8 rounded-full overflow-hidden bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-md">
                 {userAvatar ? (
-                  <img 
-                    src={userAvatar} 
-                    alt={userName || 'User'} 
+                  <img
+                    src={userAvatar}
+                    alt={userName || "User"}
                     className="w-full h-full object-cover"
                   />
                 ) : (
                   <User className="w-5 h-5 text-white" />
                 )}
               </div>
-              
+
               {/* Username (hidden on small screens) */}
               <span className="hidden md:block text-sm font-medium text-slate-700 group-hover:text-slate-900">
-                {userName || 'Гість'}
+                {userName || "Гість"}
               </span>
-              
-              <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${showDropdown ? 'rotate-180' : ''}`} />
+
+              <ChevronDown
+                className={`w-4 h-4 text-slate-400 transition-transform ${
+                  showDropdown ? "rotate-180" : ""
+                }`}
+              />
             </button>
 
             {showDropdown && (
               <>
-                <div className="fixed inset-0 z-40" onClick={() => setShowDropdown(false)}></div>
+                <div
+                  className="fixed inset-0 z-40"
+                  onClick={() => setShowDropdown(false)}
+                ></div>
                 <div className="absolute right-0 top-full mt-2 w-64 bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200">
                   {/* User Info Section */}
                   <div className="p-4 bg-gradient-to-br from-primary/5 to-accent/5 border-b border-slate-100">
                     <div className="flex items-center gap-3">
                       <div className="w-12 h-12 rounded-full overflow-hidden bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-lg">
                         {userAvatar ? (
-                          <img 
-                            src={userAvatar} 
-                            alt={userName || 'User'} 
+                          <img
+                            src={userAvatar}
+                            alt={userName || "User"}
                             className="w-full h-full object-cover"
                           />
                         ) : (
@@ -98,7 +124,7 @@ export const Header: React.FC<HeaderProps> = ({ stats, goHome, isAuthenticated, 
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-bold text-slate-900 truncate">
-                          {userName || 'Гість'}
+                          {userName || "Гість"}
                         </p>
                         <p className="text-xs text-slate-500">
                           {stats.level} • {stats.xp} XP
@@ -115,18 +141,26 @@ export const Header: React.FC<HeaderProps> = ({ stats, goHome, isAuthenticated, 
                           <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
                             <BookOpen className="w-4 h-4 text-primary" />
                           </div>
-                          <span className="text-sm text-slate-700">Вивчено карток</span>
+                          <span className="text-sm text-slate-700">
+                            Вивчено карток
+                          </span>
                         </div>
-                        <span className="text-sm font-bold text-slate-900">{stats.cardsLearned}</span>
+                        <span className="text-sm font-bold text-slate-900">
+                          {stats.cardsLearned}
+                        </span>
                       </div>
                       <div className="flex items-center justify-between px-2 py-1.5 hover:bg-slate-50 rounded-lg transition-colors">
                         <div className="flex items-center gap-2">
                           <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center">
                             <BookOpen className="w-4 h-4 text-accent" />
                           </div>
-                          <span className="text-sm text-slate-700">Пройдено тестів</span>
+                          <span className="text-sm text-slate-700">
+                            Пройдено тестів
+                          </span>
                         </div>
-                        <span className="text-sm font-bold text-slate-900">{stats.testsPassed}</span>
+                        <span className="text-sm font-bold text-slate-900">
+                          {stats.testsPassed}
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -135,7 +169,7 @@ export const Header: React.FC<HeaderProps> = ({ stats, goHome, isAuthenticated, 
                   <div className="p-2 border-t border-slate-100">
                     {isAuthenticated && onLogout ? (
                       <button
-                        onClick={(e) => { 
+                        onClick={(e) => {
                           e.stopPropagation();
                           setShowDropdown(false);
                           onLogout();
@@ -147,9 +181,9 @@ export const Header: React.FC<HeaderProps> = ({ stats, goHome, isAuthenticated, 
                       </button>
                     ) : onLogin ? (
                       <button
-                        onClick={() => { 
-                          onLogin(); 
-                          setShowDropdown(false); 
+                        onClick={() => {
+                          onLogin();
+                          setShowDropdown(false);
                         }}
                         className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-primary hover:bg-primary/5 rounded-lg transition-colors font-medium"
                       >

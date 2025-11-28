@@ -2,11 +2,8 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { Upload, FileText, Image as ImageIcon, Loader2, FileType, Presentation } from 'lucide-react';
 import { processContent } from '../services/grokService';
 import { StudyMaterial } from '../types';
-// @ts-ignore
 import * as pdfjsLib from 'pdfjs-dist';
-// @ts-ignore
-import * as mammoth from 'mammoth';
-// @ts-ignore
+import mammoth from 'mammoth';
 import JSZip from 'jszip';
 
 interface FileUploadProps {
@@ -20,11 +17,9 @@ export const FileUpload: React.FC<FileUploadProps> = ({ onProcessingComplete }) 
 
   useEffect(() => {
     const initPdfWorker = () => {
-      const lib = pdfjsLib as any;
-      const workerUrl = `https://esm.sh/pdfjs-dist@3.11.174/build/pdf.worker.min.js`;
-      const globalWorkerOptions = lib.GlobalWorkerOptions || (lib.default && lib.default.GlobalWorkerOptions);
-      if (globalWorkerOptions) {
-        globalWorkerOptions.workerSrc = workerUrl;
+      // Configure PDF.js worker
+      if (pdfjsLib.GlobalWorkerOptions) {
+        pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
       }
     };
     if (typeof window !== 'undefined') initPdfWorker();
@@ -37,14 +32,14 @@ export const FileUpload: React.FC<FileUploadProps> = ({ onProcessingComplete }) 
     else if (e.type === 'dragleave') setIsDragging(false);
   }, []);
 
-  // ... (Extract text logic remains same, omitting for brevity to focus on design, but needs to be included in full file return)
   const extractTextFromPDF = async (file: File): Promise<string> => {
     const arrayBuffer = await file.arrayBuffer();
-    const lib = pdfjsLib as any;
-    const getDocument = lib.getDocument || (lib.default && lib.default.getDocument);
-    if (!getDocument) throw new Error("PDF parser not initialized");
+    
+    if (!pdfjsLib.getDocument) {
+      throw new Error("PDF parser not initialized");
+    }
 
-    const loadingTask = getDocument({ data: arrayBuffer });
+    const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
     const pdf = await loadingTask.promise;
     let fullText = '';
     const numPages = pdf.numPages;
@@ -60,10 +55,12 @@ export const FileUpload: React.FC<FileUploadProps> = ({ onProcessingComplete }) 
 
   const extractTextFromDOCX = async (file: File): Promise<string> => {
     const arrayBuffer = await file.arrayBuffer();
-    const lib = mammoth as any;
-    const extractRawText = lib.extractRawText || (lib.default && lib.default.extractRawText);
-    if (!extractRawText) throw new Error("DOCX parser not initialized");
-    const result = await extractRawText({ arrayBuffer });
+    
+    if (!mammoth.extractRawText) {
+      throw new Error("DOCX parser not initialized");
+    }
+    
+    const result = await mammoth.extractRawText({ arrayBuffer });
     return result.value;
   };
 

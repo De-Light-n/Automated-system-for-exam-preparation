@@ -310,7 +310,8 @@ const App: React.FC = () => {
             Всі інструменти для навчання в одному місці
           </h2>
           <p className="text-lg text-slate-600 text-center mb-16 max-w-2xl mx-auto">
-            Завантажуй конспекти і отримуй повний набір інтерактивних матеріалів за секунди
+            Завантажуй конспекти і отримуй повний набір інтерактивних матеріалів
+            за секунди
           </p>
 
           {/* Feature 1: Flashcards */}
@@ -319,11 +320,14 @@ const App: React.FC = () => {
               <div className="bg-gradient-to-br from-primary to-accent p-3 rounded-xl w-fit mb-6">
                 <Sparkles className="w-8 h-8 text-white" />
               </div>
-              <h3 className="text-3xl font-bold text-slate-900 mb-4">Інтерактивні картки</h3>
+              <h3 className="text-3xl font-bold text-slate-900 mb-4">
+                Інтерактивні картки
+              </h3>
               <p className="text-lg text-slate-600 mb-6 leading-relaxed">
-                Вивчай матеріал за допомогою карток з плавною 3D анімацією. 
-                Натисни на картку, щоб перевернути її та побачити відповідь. 
-                Система автоматично генерує питання та відповіді з твого конспекту.
+                Вивчай матеріал за допомогою карток з плавною 3D анімацією.
+                Натисни на картку, щоб перевернути її та побачити відповідь.
+                Система автоматично генерує питання та відповіді з твого
+                конспекту.
               </p>
               <ul className="space-y-3 text-slate-600">
                 <li className="flex items-start gap-3">
@@ -350,8 +354,12 @@ const App: React.FC = () => {
               <div className="bg-gradient-to-br from-primary/5 to-accent/5 rounded-2xl h-[400px] flex items-center justify-center border-2 border-dashed border-slate-300 shadow-xl">
                 <div className="text-center p-8">
                   <Sparkles className="w-16 h-16 text-slate-400 mx-auto mb-4" />
-                  <p className="text-slate-500 font-medium">Місце для скріну карток</p>
-                  <p className="text-slate-400 text-sm mt-2">Розмір: 800x600px</p>
+                  <p className="text-slate-500 font-medium">
+                    Місце для скріну карток
+                  </p>
+                  <p className="text-slate-400 text-sm mt-2">
+                    Розмір: 800x600px
+                  </p>
                 </div>
               </div>
             </div>
@@ -363,11 +371,13 @@ const App: React.FC = () => {
               <div className="bg-gradient-to-br from-primary to-accent p-3 rounded-xl w-fit mb-6">
                 <BookOpen className="w-8 h-8 text-white" />
               </div>
-              <h3 className="text-3xl font-bold text-slate-900 mb-4">Розумні тести</h3>
+              <h3 className="text-3xl font-bold text-slate-900 mb-4">
+                Розумні тести
+              </h3>
               <p className="text-lg text-slate-600 mb-6 leading-relaxed">
-                Перевір свої знання за допомогою автоматично згенерованих тестів. 
-                AI створює питання різної складності на основі твого матеріалу 
-                з миттєвою перевіркою відповідей.
+                Перевір свої знання за допомогою автоматично згенерованих
+                тестів. AI створює питання різної складності на основі твого
+                матеріалу з миттєвою перевіркою відповідей.
               </p>
               <ul className="space-y-3 text-slate-600">
                 <li className="flex items-start gap-3">
@@ -394,8 +404,12 @@ const App: React.FC = () => {
               <div className="bg-gradient-to-br from-primary/5 to-accent/5 rounded-2xl h-[400px] flex items-center justify-center border-2 border-dashed border-slate-300 shadow-xl">
                 <div className="text-center p-8">
                   <BookOpen className="w-16 h-16 text-slate-400 mx-auto mb-4" />
-                  <p className="text-slate-500 font-medium">Місце для скріну тесту</p>
-                  <p className="text-slate-400 text-sm mt-2">Розмір: 800x600px</p>
+                  <p className="text-slate-500 font-medium">
+                    Місце для скріну тесту
+                  </p>
+                  <p className="text-slate-400 text-sm mt-2">
+                    Розмір: 800x600px
+                  </p>
                 </div>
               </div>
             </div>
@@ -407,10 +421,13 @@ const App: React.FC = () => {
               <div className="bg-gradient-to-br from-primary to-accent p-3 rounded-xl w-fit mb-6">
                 <Brain className="w-8 h-8 text-white" />
               </div>
-              <h3 className="text-3xl font-bold text-slate-900 mb-4">Ментальні карти</h3>
+              <h3 className="text-3xl font-bold text-slate-900 mb-4">
+                Ментальні карти
+              </h3>
               <p className="text-lg text-slate-600 mb-6 leading-relaxed">
-                Візуалізуй зв'язки між темами та концепціями у вигляді інтерактивної ментальної карти. 
-                Бач всю картину матеріалу на одній діаграмі з можливістю масштабування та навігації.
+                Візуалізуй зв'язки між темами та концепціями у вигляді
+                інтерактивної ментальної карти. Бач всю картину матеріалу на
+                одній діаграмі з можливістю масштабування та навігації.
               </p>
               <ul className="space-y-3 text-slate-600">
                 <li className="flex items-start gap-3">
@@ -437,8 +454,12 @@ const App: React.FC = () => {
               <div className="bg-gradient-to-br from-primary/5 to-accent/5 rounded-2xl h-[400px] flex items-center justify-center border-2 border-dashed border-slate-300 shadow-xl">
                 <div className="text-center p-8">
                   <Brain className="w-16 h-16 text-slate-400 mx-auto mb-4" />
-                  <p className="text-slate-500 font-medium">Місце для скріну ментальної карти</p>
-                  <p className="text-slate-400 text-sm mt-2">Розмір: 800x600px</p>
+                  <p className="text-slate-500 font-medium">
+                    Місце для скріну ментальної карти
+                  </p>
+                  <p className="text-slate-400 text-sm mt-2">
+                    Розмір: 800x600px
+                  </p>
                 </div>
               </div>
             </div>
@@ -450,10 +471,13 @@ const App: React.FC = () => {
               <div className="bg-gradient-to-br from-primary to-accent p-3 rounded-xl w-fit mb-6">
                 <MessageCircle className="w-8 h-8 text-white" />
               </div>
-              <h3 className="text-3xl font-bold text-slate-900 mb-4">AI-асистент</h3>
+              <h3 className="text-3xl font-bold text-slate-900 mb-4">
+                AI-асистент
+              </h3>
               <p className="text-lg text-slate-600 mb-6 leading-relaxed">
-                Постав будь-яке питання по матеріалу та отримай детальну відповідь від AI. 
-                Асистент знає весь контекст твого конспекту і може пояснити складні теми простою мовою.
+                Постав будь-яке питання по матеріалу та отримай детальну
+                відповідь від AI. Асистент знає весь контекст твого конспекту і
+                може пояснити складні теми простою мовою.
               </p>
               <ul className="space-y-3 text-slate-600">
                 <li className="flex items-start gap-3">
@@ -480,8 +504,12 @@ const App: React.FC = () => {
               <div className="bg-gradient-to-br from-primary/5 to-accent/5 rounded-2xl h-[400px] flex items-center justify-center border-2 border-dashed border-slate-300 shadow-xl">
                 <div className="text-center p-8">
                   <MessageCircle className="w-16 h-16 text-slate-400 mx-auto mb-4" />
-                  <p className="text-slate-500 font-medium">Місце для скріну чату</p>
-                  <p className="text-slate-400 text-sm mt-2">Розмір: 800x600px</p>
+                  <p className="text-slate-500 font-medium">
+                    Місце для скріну чату
+                  </p>
+                  <p className="text-slate-400 text-sm mt-2">
+                    Розмір: 800x600px
+                  </p>
                 </div>
               </div>
             </div>
@@ -699,9 +727,7 @@ const App: React.FC = () => {
         {view === "dashboard" && renderDashboard()}
       </main>
 
-      {showAuthModal && (
-        <AuthModal onClose={() => setShowAuthModal(false)} />
-      )}
+      {showAuthModal && <AuthModal onClose={() => setShowAuthModal(false)} />}
     </div>
   );
 };

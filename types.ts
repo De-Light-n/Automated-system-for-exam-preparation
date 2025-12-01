@@ -70,6 +70,7 @@ export interface ChatMessage {
 export type ViewMode = "home" | "upload" | "dashboard";
 export type DashboardTab =
   | "overview"
+  | "stats"
   | "flashcards"
   | "quiz"
   | "quiz-history"

@@ -71,7 +71,7 @@ export const Footer: React.FC = () => {
                 support@examninja.com
               </a>
               <a
-                href="https://github.com"
+                href="https://github.com/De-Light-n/Automated-system-for-exam-preparation"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-2 text-sm text-slate-400 hover:text-primary transition-colors"

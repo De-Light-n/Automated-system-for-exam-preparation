@@ -9,6 +9,7 @@ import {
   LogIn,
   User,
 } from "lucide-react";
+import { ThemeToggle } from "./ThemeToggle";
 
 interface HeaderProps {
   stats: UserStats;
@@ -34,7 +35,7 @@ export const Header: React.FC<HeaderProps> = ({
 
   return (
     <header className="sticky top-4 z-50 px-4 mb-4">
-      <div className="max-w-7xl mx-auto glass rounded-2xl shadow-lg shadow-slate-200/50 px-4 py-3 flex items-center justify-between transition-all hover:shadow-xl hover:shadow-slate-200/60">
+      <div className="max-w-7xl mx-auto glass rounded-2xl shadow-lg shadow-slate-200/50 dark:shadow-slate-900/50 px-4 py-3 flex items-center justify-between transition-all hover:shadow-xl hover:shadow-slate-200/60 dark:hover:shadow-slate-900/60">
         <div
           className="flex items-center gap-3 cursor-pointer group"
           onClick={goHome}
@@ -52,11 +53,11 @@ export const Header: React.FC<HeaderProps> = ({
           {isAuthenticated && (
             <>
               <div className="hidden sm:flex flex-col min-w-[140px]">
-                <div className="flex justify-between text-[10px] uppercase font-bold text-slate-400 mb-1 tracking-wider">
+                <div className="flex justify-between text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500 mb-1 tracking-wider">
                   <span>{stats.level}</span>
                   <span>{stats.xp} XP</span>
                 </div>
-                <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden shadow-inner">
+                <div className="w-full bg-slate-100 dark:bg-slate-700 rounded-full h-2 overflow-hidden shadow-inner">
                   <div
                     className="bg-gradient-to-r from-primary to-accent h-full rounded-full transition-all duration-1000 ease-out relative"
                     style={{ width: `${progressPercent}%` }}
@@ -66,15 +67,20 @@ export const Header: React.FC<HeaderProps> = ({
                 </div>
               </div>
 
-              <div className="h-8 w-px bg-slate-200 hidden sm:block"></div>
+              <div className="h-8 w-px bg-slate-200 dark:bg-slate-700 hidden sm:block"></div>
             </>
           )}
+
+          {/* Theme Toggle */}
+          <ThemeToggle variant="icon" />
+
+          <div className="h-8 w-px bg-slate-200 dark:bg-slate-700 hidden sm:block"></div>
 
           {/* User Profile with Avatar */}
           <div className="relative">
             <button
               onClick={() => setShowDropdown(!showDropdown)}
-              className="flex items-center gap-2 hover:bg-slate-100 rounded-full pr-3 pl-1 py-1 transition-colors group"
+              className="flex items-center gap-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full pr-3 pl-1 py-1 transition-colors group"
             >
               {/* Avatar */}
               <div className="w-8 h-8 rounded-full overflow-hidden bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-md">
@@ -90,12 +96,12 @@ export const Header: React.FC<HeaderProps> = ({
               </div>
 
               {/* Username (hidden on small screens) */}
-              <span className="hidden md:block text-sm font-medium text-slate-700 group-hover:text-slate-900">
+              <span className="hidden md:block text-sm font-medium text-slate-700 dark:text-slate-300 group-hover:text-slate-900 dark:group-hover:text-white">
                 {userName || "Гість"}
               </span>
 
               <ChevronDown
-                className={`w-4 h-4 text-slate-400 transition-transform ${
+                className={`w-4 h-4 text-slate-400 dark:text-slate-500 transition-transform ${
                   showDropdown ? "rotate-180" : ""
                 }`}
               />
@@ -107,9 +113,9 @@ export const Header: React.FC<HeaderProps> = ({
                   className="fixed inset-0 z-40"
                   onClick={() => setShowDropdown(false)}
                 ></div>
-                <div className="absolute right-0 top-full mt-2 w-64 bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+                <div className="absolute right-0 top-full mt-2 w-64 bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-700 overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200">
                   {/* User Info Section */}
-                  <div className="p-4 bg-gradient-to-br from-primary/5 to-accent/5 border-b border-slate-100">
+                  <div className="p-4 bg-gradient-to-br from-primary/5 to-accent/5 dark:from-primary/10 dark:to-accent/10 border-b border-slate-100 dark:border-slate-700">
                     <div className="flex items-center gap-3">
                       <div className="w-12 h-12 rounded-full overflow-hidden bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-lg">
                         {userAvatar ? (
@@ -123,10 +129,10 @@ export const Header: React.FC<HeaderProps> = ({
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-bold text-slate-900 truncate">
+                        <p className="text-sm font-bold text-slate-900 dark:text-white truncate">
                           {userName || "Гість"}
                         </p>
-                        <p className="text-xs text-slate-500">
+                        <p className="text-xs text-slate-500 dark:text-slate-400">
                           {stats.level} • {stats.xp} XP
                         </p>
                       </div>
@@ -136,29 +142,29 @@ export const Header: React.FC<HeaderProps> = ({
                   {/* Stats Section */}
                   <div className="p-3">
                     <div className="space-y-2">
-                      <div className="flex items-center justify-between px-2 py-1.5 hover:bg-slate-50 rounded-lg transition-colors">
+                      <div className="flex items-center justify-between px-2 py-1.5 hover:bg-slate-50 dark:hover:bg-slate-700/50 rounded-lg transition-colors">
                         <div className="flex items-center gap-2">
-                          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                          <div className="w-8 h-8 rounded-lg bg-primary/10 dark:bg-primary/20 flex items-center justify-center">
                             <BookOpen className="w-4 h-4 text-primary" />
                           </div>
-                          <span className="text-sm text-slate-700">
+                          <span className="text-sm text-slate-700 dark:text-slate-300">
                             Вивчено карток
                           </span>
                         </div>
-                        <span className="text-sm font-bold text-slate-900">
+                        <span className="text-sm font-bold text-slate-900 dark:text-white">
                           {stats.cardsLearned}
                         </span>
                       </div>
-                      <div className="flex items-center justify-between px-2 py-1.5 hover:bg-slate-50 rounded-lg transition-colors">
+                      <div className="flex items-center justify-between px-2 py-1.5 hover:bg-slate-50 dark:hover:bg-slate-700/50 rounded-lg transition-colors">
                         <div className="flex items-center gap-2">
-                          <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center">
+                          <div className="w-8 h-8 rounded-lg bg-accent/10 dark:bg-accent/20 flex items-center justify-center">
                             <BookOpen className="w-4 h-4 text-accent" />
                           </div>
-                          <span className="text-sm text-slate-700">
+                          <span className="text-sm text-slate-700 dark:text-slate-300">
                             Пройдено тестів
                           </span>
                         </div>
-                        <span className="text-sm font-bold text-slate-900">
+                        <span className="text-sm font-bold text-slate-900 dark:text-white">
                           {stats.testsPassed}
                         </span>
                       </div>
@@ -166,7 +172,7 @@ export const Header: React.FC<HeaderProps> = ({
                   </div>
 
                   {/* Actions Section */}
-                  <div className="p-2 border-t border-slate-100">
+                  <div className="p-2 border-t border-slate-100 dark:border-slate-700">
                     {isAuthenticated && onLogout ? (
                       <button
                         onClick={(e) => {
@@ -174,7 +180,7 @@ export const Header: React.FC<HeaderProps> = ({
                           setShowDropdown(false);
                           onLogout();
                         }}
-                        className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors font-medium"
+                        className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors font-medium"
                       >
                         <LogOut className="w-4 h-4" />
                         Вийти з акаунта
@@ -185,7 +191,7 @@ export const Header: React.FC<HeaderProps> = ({
                           onLogin();
                           setShowDropdown(false);
                         }}
-                        className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-primary hover:bg-primary/5 rounded-lg transition-colors font-medium"
+                        className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-primary hover:bg-primary/5 dark:hover:bg-primary/10 rounded-lg transition-colors font-medium"
                       >
                         <LogIn className="w-4 h-4" />
                         Увійти

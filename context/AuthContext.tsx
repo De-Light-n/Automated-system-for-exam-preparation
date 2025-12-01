@@ -56,8 +56,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       if (storedToken) {
         try {
           api.setAuthToken(storedToken);
-          const userData = await api.getProfile();
-          setUser(userData);
+          const userData = await api.getProfile() as { _id?: string; id?: string; email: string; username: string; avatar?: string; stats: User['stats'] };
+          setUser({
+            id: userData._id || userData.id || '',
+            email: userData.email,
+            username: userData.username,
+            avatar: userData.avatar,
+            stats: userData.stats,
+          });
           setToken(storedToken);
         } catch (error) {
           console.error("Token validation failed:", error);

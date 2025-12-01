@@ -8,8 +8,28 @@ export default defineConfig(({ mode }) => {
       server: {
         port: 3000,
         host: '0.0.0.0',
+        proxy: {
+          '/api': {
+            target: 'http://localhost:5000',
+            changeOrigin: true,
+            rewrite: (path) => path,
+          }
+        }
       },
       plugins: [react()],
+      build: {
+        rollupOptions: {
+          output: {
+            manualChunks: {
+              // Split vendor chunks for better caching
+              'vendor-react': ['react', 'react-dom'],
+              'vendor-pdf': ['pdfjs-dist'],
+              'vendor-utils': ['jszip', 'mammoth'],
+            }
+          }
+        },
+        chunkSizeWarningLimit: 600,
+      },
       define: {
         'process.env.API_KEY': JSON.stringify(env.GEMINI_API_KEY),
         'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY)

@@ -18,7 +18,7 @@ interface QuizHistoryProps {
 interface SavedQuiz {
   _id: string;
   isCompleted: boolean;
-  currentQuestionIndex: number;
+  currentQuestionIndex?: number;
   totalQuestions: number;
   correctAnswers: number;
   scorePercentage: number;
@@ -78,7 +78,7 @@ export const QuizHistory: React.FC<QuizHistoryProps> = ({
       {/* Незавершені тести */}
       {inProgressQuizzes.length > 0 && (
         <div>
-          <h3 className="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2">
+          <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
             <Clock className="w-5 h-5 text-orange-500" />
             Незавершені тести
           </h3>
@@ -86,21 +86,21 @@ export const QuizHistory: React.FC<QuizHistoryProps> = ({
             {inProgressQuizzes.map((quiz) => (
               <div
                 key={quiz._id}
-                className="bg-orange-50 border-2 border-orange-200 rounded-2xl p-6 hover:shadow-lg transition-all group"
+                className="bg-orange-50 dark:bg-orange-900/20 border-2 border-orange-200 dark:border-orange-800 rounded-2xl p-6 hover:shadow-lg transition-all group"
               >
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
-                      <PlayCircle className="w-5 h-5 text-orange-600" />
-                      <span className="text-sm font-bold text-orange-600 uppercase tracking-wider">
+                      <PlayCircle className="w-5 h-5 text-orange-600 dark:text-orange-400" />
+                      <span className="text-sm font-bold text-orange-600 dark:text-orange-400 uppercase tracking-wider">
                         В процесі
                       </span>
                     </div>
-                    <p className="text-slate-600 text-sm mb-3">
+                    <p className="text-slate-600 dark:text-slate-300 text-sm mb-3">
                       Прогрес: {quiz.currentQuestionIndex} /{" "}
                       {quiz.totalQuestions || "?"} питань
                     </p>
-                    <p className="text-xs text-slate-400">
+                    <p className="text-xs text-slate-400 dark:text-slate-500">
                       Розпочато: {formatDate(quiz.createdAt)}
                     </p>
                   </div>
@@ -120,14 +120,14 @@ export const QuizHistory: React.FC<QuizHistoryProps> = ({
 
       {/* Завершені тести */}
       <div>
-        <h3 className="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2">
+        <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
           <Trophy className="w-5 h-5 text-green-500" />
           Завершені тести
         </h3>
 
         {completedQuizzes.length === 0 ? (
-          <div className="bg-slate-50 rounded-2xl p-8 text-center border-2 border-dashed border-slate-200">
-            <p className="text-slate-500 mb-4">
+          <div className="bg-slate-50 dark:bg-slate-800 rounded-2xl p-8 text-center border-2 border-dashed border-slate-200 dark:border-slate-700">
+            <p className="text-slate-500 dark:text-slate-400 mb-4">
               Ви ще не пройшли жодного тесту по цій темі
             </p>
             <button
@@ -143,24 +143,24 @@ export const QuizHistory: React.FC<QuizHistoryProps> = ({
             {completedQuizzes.map((quiz) => (
               <div
                 key={quiz._id}
-                className="bg-white border-2 border-slate-200 rounded-2xl p-6 hover:border-primary/50 hover:shadow-lg transition-all"
+                className="bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 rounded-2xl p-6 hover:border-primary/50 hover:shadow-lg transition-all"
               >
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="flex items-center gap-4 mb-3">
                       <div className="flex items-center gap-2">
                         <CheckCircle2 className="w-5 h-5 text-green-600" />
-                        <span className="text-2xl font-bold text-slate-800">
+                        <span className="text-2xl font-bold text-slate-800 dark:text-white">
                           {quiz.scorePercentage}%
                         </span>
                       </div>
                       <div
                         className={`px-3 py-1 rounded-full text-xs font-bold ${
                           quiz.scorePercentage >= 80
-                            ? "bg-green-100 text-green-700"
+                            ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400"
                             : quiz.scorePercentage >= 60
-                            ? "bg-yellow-100 text-yellow-700"
-                            : "bg-red-100 text-red-700"
+                            ? "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400"
+                            : "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400"
                         }`}
                       >
                         {quiz.scorePercentage >= 80
@@ -170,11 +170,11 @@ export const QuizHistory: React.FC<QuizHistoryProps> = ({
                           : "Потрібно попрацювати"}
                       </div>
                     </div>
-                    <p className="text-slate-600 text-sm mb-2">
+                    <p className="text-slate-600 dark:text-slate-300 text-sm mb-2">
                       Правильних відповідей: {quiz.correctAnswers} з{" "}
                       {quiz.totalQuestions}
                     </p>
-                    <div className="flex items-center gap-2 text-xs text-slate-400">
+                    <div className="flex items-center gap-2 text-xs text-slate-400 dark:text-slate-500">
                       <Calendar className="w-3 h-3" />
                       {formatDate(quiz.completedAt || quiz.updatedAt)}
                     </div>
@@ -184,7 +184,7 @@ export const QuizHistory: React.FC<QuizHistoryProps> = ({
             ))}
             <button
               onClick={onStartNewQuiz}
-              className="w-full py-4 border-2 border-dashed border-slate-300 rounded-2xl text-slate-600 font-bold hover:border-primary hover:text-primary hover:bg-primary/5 transition-all flex items-center justify-center gap-2"
+              className="w-full py-4 border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-2xl text-slate-600 dark:text-slate-400 font-bold hover:border-primary hover:text-primary hover:bg-primary/5 transition-all flex items-center justify-center gap-2"
             >
               <PlayCircle className="w-5 h-5" />
               Пройти тест ще раз

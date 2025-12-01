@@ -1,13 +1,15 @@
 {
   "name": "examninja",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "dev:all": "concurrently \"npm run dev\" \"cd server && npm run dev\"",
-    "build": "vite build",
-    "preview": "vite preview"
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "lint": "tsc --noEmit",
+    "start": "vite preview"
   },
   "dependencies": {
     "jszip": "^3.10.1",
@@ -19,6 +21,8 @@
   },
   "devDependencies": {
     "@types/node": "^22.14.0",
+    "@types/react": "^19.2.7",
+    "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^5.0.0",
     "concurrently": "^8.2.2",
     "typescript": "~5.8.2",

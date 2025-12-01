@@ -22,8 +22,54 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// Trust proxy for production (needed for rate limiting behind reverse proxy)
+if (process.env.NODE_ENV === "production") {
+  app.set("trust proxy", 1);
+}
+
+// Simple in-memory rate limiter
+const rateLimitStore = new Map<string, { count: number; resetTime: number }>();
+const RATE_LIMIT_WINDOW = 60 * 1000; // 1 minute
+const RATE_LIMIT_MAX = 100; // 100 requests per minute
+
+const rateLimiter = (req: express.Request, res: express.Response, next: express.NextFunction) => {
+  const ip = req.ip || req.socket.remoteAddress || "unknown";
+  const now = Date.now();
+  
+  const record = rateLimitStore.get(ip);
+  
+  if (!record || now > record.resetTime) {
+    rateLimitStore.set(ip, { count: 1, resetTime: now + RATE_LIMIT_WINDOW });
+    return next();
+  }
+  
+  if (record.count >= RATE_LIMIT_MAX) {
+    return res.status(429).json({ 
+      error: "Забагато запитів. Спробуйте пізніше.",
+      retryAfter: Math.ceil((record.resetTime - now) / 1000)
+    });
+  }
+  
+  record.count++;
+  next();
+};
+
+// Clean up rate limit store periodically
+setInterval(() => {
+  const now = Date.now();
+  for (const [ip, record] of rateLimitStore.entries()) {
+    if (now > record.resetTime) {
+      rateLimitStore.delete(ip);
+    }
+  }
+}, 60000);
+
 // Middleware
-app.use(helmet());
+app.use(rateLimiter);
+app.use(helmet({
+  contentSecurityPolicy: process.env.NODE_ENV === "production" ? undefined : false,
+  crossOriginEmbedderPolicy: false,
+}));
 app.use(
   cors({
     origin:
@@ -33,7 +79,9 @@ app.use(
             "http://localhost:5173",
             "http://localhost:5174",
             "http://localhost:3000",
+            "http://localhost:3001",
             "http://127.0.0.1:3000",
+            "http://127.0.0.1:3001",
           ],
     credentials: true,
   })

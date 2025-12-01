@@ -173,10 +173,10 @@ export const FileUpload: React.FC<FileUploadProps> = ({
   return (
     <div className="w-full max-w-3xl mx-auto mt-12 px-6">
       <div className="text-center mb-10">
-        <h2 className="text-3xl font-heading font-bold text-slate-900 mb-2">
+        <h2 className="text-3xl font-heading font-bold text-slate-900 dark:text-white mb-2">
           Завантаження матеріалів
         </h2>
-        <p className="text-slate-500">
+        <p className="text-slate-500 dark:text-slate-400">
           Ми підтримуємо PDF, DOCX, PPTX, TXT та Markdown
         </p>
       </div>
@@ -195,10 +195,10 @@ export const FileUpload: React.FC<FileUploadProps> = ({
       >
         {/* Background Pattern */}
         <div
-          className={`absolute inset-0 bg-white border-2 border-dashed transition-colors duration-300 z-0 ${
+          className={`absolute inset-0 bg-white dark:bg-slate-800 border-2 border-dashed transition-colors duration-300 z-0 ${
             isDragging
-              ? "border-primary bg-primary/5"
-              : "border-slate-300 group-hover:border-primary/50"
+              ? "border-primary bg-primary/5 dark:bg-primary/10"
+              : "border-slate-300 dark:border-slate-600 group-hover:border-primary/50"
           }`}
         ></div>
 
@@ -209,27 +209,27 @@ export const FileUpload: React.FC<FileUploadProps> = ({
                 <div className="absolute inset-0 bg-primary/20 blur-xl rounded-full animate-pulse"></div>
                 <Loader2 className="w-16 h-16 text-primary animate-spin relative z-10" />
               </div>
-              <h3 className="text-xl font-bold text-slate-800 mt-8 mb-2">
+              <h3 className="text-xl font-bold text-slate-800 dark:text-white mt-8 mb-2">
                 Аналізуємо контент
               </h3>
-              <p className="text-slate-500 text-sm bg-slate-100 px-3 py-1 rounded-full animate-pulse">
+              <p className="text-slate-500 dark:text-slate-400 text-sm bg-slate-100 dark:bg-slate-700 px-3 py-1 rounded-full animate-pulse">
                 {progress}
               </p>
             </div>
           ) : (
             <>
               <div
-                className={`w-20 h-20 bg-slate-50 rounded-2xl flex items-center justify-center mb-6 shadow-sm transition-transform duration-500 group-hover:scale-110 group-hover:-rotate-3 ${
-                  isDragging ? "bg-primary/10 text-primary" : "text-slate-400"
+                className={`w-20 h-20 bg-slate-50 dark:bg-slate-700 rounded-2xl flex items-center justify-center mb-6 shadow-sm transition-transform duration-500 group-hover:scale-110 group-hover:-rotate-3 ${
+                  isDragging ? "bg-primary/10 text-primary" : "text-slate-400 dark:text-slate-300"
                 }`}
               >
                 <Upload className="w-10 h-10" />
               </div>
 
-              <h3 className="text-2xl font-bold text-slate-800 mb-3">
+              <h3 className="text-2xl font-bold text-slate-800 dark:text-white mb-3">
                 Перетягніть файли сюди
               </h3>
-              <p className="text-slate-500 mb-8 max-w-sm text-center">
+              <p className="text-slate-500 dark:text-slate-400 mb-8 max-w-sm text-center">
                 Або виберіть файл з комп'ютера. Максимальний розмір 10MB.
               </p>
 
@@ -250,7 +250,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
         </div>
       </div>
 
-      <div className="mt-10 grid grid-cols-1 sm:grid-cols-3 gap-6 text-sm text-slate-500">
+      <div className="mt-10 grid grid-cols-1 sm:grid-cols-3 gap-6 text-sm text-slate-500 dark:text-slate-400">
         {[
           { icon: FileText, label: "Лекції та статті", desc: "PDF, DOCX, TXT" },
           { icon: Presentation, label: "Презентації", desc: "PPTX слайди" },
@@ -258,13 +258,13 @@ export const FileUpload: React.FC<FileUploadProps> = ({
         ].map((item, idx) => (
           <div
             key={idx}
-            className="flex flex-col items-center text-center p-4 rounded-2xl bg-white border border-slate-100 shadow-sm"
+            className="flex flex-col items-center text-center p-4 rounded-2xl bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 shadow-sm"
           >
-            <div className="p-2 bg-slate-50 rounded-lg mb-2 text-slate-400">
+            <div className="p-2 bg-slate-50 dark:bg-slate-700 rounded-lg mb-2 text-slate-400 dark:text-slate-300">
               <item.icon className="w-5 h-5" />
             </div>
-            <span className="font-bold text-slate-700">{item.label}</span>
-            <span className="text-xs text-slate-400">{item.desc}</span>
+            <span className="font-bold text-slate-700 dark:text-slate-200">{item.label}</span>
+            <span className="text-xs text-slate-400 dark:text-slate-500">{item.desc}</span>
           </div>
         ))}
       </div>

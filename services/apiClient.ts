@@ -7,8 +7,60 @@ interface AuthResponse {
     email: string;
     username: string;
     avatar?: string;
-    stats: any;
+    stats: {
+      xp: number;
+      level: string;
+      streak: number;
+      lastActiveDate?: string;
+      achievements: string[];
+      cardsLearned: number;
+      testsPassed: number;
+    };
   };
+}
+
+interface UserResponse {
+  _id: string;
+  email: string;
+  username: string;
+  avatar?: string;
+  stats: {
+    xp: number;
+    level: string;
+    streak: number;
+    lastActiveDate?: string;
+    achievements: string[];
+    cardsLearned: number;
+    testsPassed: number;
+  };
+}
+
+interface MaterialResponse {
+  _id: string;
+  userId: string;
+  title: string;
+  originalContent: string;
+  summary: string;
+  glossary: { term: string; definition: string }[];
+  keyFacts: string[];
+  mindMap: any;
+  flashcards: any[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface QuizResultResponse {
+  _id: string;
+  userId: string;
+  materialId: string;
+  currentQuestionIndex?: number;
+  answers?: { questionId: string; userAnswer: string }[];
+  isCompleted: boolean;
+  totalQuestions: number;
+  correctAnswers: number;
+  scorePercentage: number;
+  createdAt: string;
+  updatedAt: string;
 }
 
 class ApiClient {
@@ -96,50 +148,50 @@ class ApiClient {
   }
 
   // User
-  async getProfile() {
-    return this.request("/auth/profile");
+  async getProfile(): Promise<UserResponse> {
+    return this.request<UserResponse>("/auth/profile");
   }
 
-  async getUser() {
-    return this.request("/users/me");
+  async getUser(): Promise<UserResponse> {
+    return this.request<UserResponse>("/users/me");
   }
 
   async updateStats(stats: {
     xpDelta?: number;
     cardsLearned?: number;
     testsPassed?: number;
-  }) {
-    return this.request("/users/stats", {
+  }): Promise<UserResponse> {
+    return this.request<UserResponse>("/users/stats", {
       method: "PATCH",
       body: JSON.stringify(stats),
     });
   }
 
-  async addAchievement(achievement: string) {
-    return this.request("/users/achievements", {
+  async addAchievement(achievement: string): Promise<UserResponse> {
+    return this.request<UserResponse>("/users/achievements", {
       method: "POST",
       body: JSON.stringify({ achievement }),
     });
   }
 
   // Materials
-  async getMaterials() {
-    return this.request("/materials");
+  async getMaterials(): Promise<MaterialResponse[]> {
+    return this.request<MaterialResponse[]>("/materials");
   }
 
-  async getMaterial(id: string) {
-    return this.request(`/materials/${id}`);
+  async getMaterial(id: string): Promise<MaterialResponse> {
+    return this.request<MaterialResponse>(`/materials/${id}`);
   }
 
-  async createMaterial(materialData: any) {
-    return this.request("/materials", {
+  async createMaterial(materialData: any): Promise<MaterialResponse> {
+    return this.request<MaterialResponse>("/materials", {
       method: "POST",
       body: JSON.stringify(materialData),
     });
   }
 
-  async updateMaterial(id: string, data: any) {
-    return this.request(`/materials/${id}`, {
+  async updateMaterial(id: string, data: any): Promise<MaterialResponse> {
+    return this.request<MaterialResponse>(`/materials/${id}`, {
       method: "PATCH",
       body: JSON.stringify(data),
     });
@@ -150,21 +202,21 @@ class ApiClient {
     cardId: string,
     status: string,
     nextReview?: number
-  ) {
-    return this.request(`/materials/${materialId}/flashcards/${cardId}`, {
+  ): Promise<MaterialResponse> {
+    return this.request<MaterialResponse>(`/materials/${materialId}/flashcards/${cardId}`, {
       method: "PATCH",
       body: JSON.stringify({ status, nextReview }),
     });
   }
 
-  async deleteMaterial(id: string) {
-    return this.request(`/materials/${id}`, {
+  async deleteMaterial(id: string): Promise<void> {
+    return this.request<void>(`/materials/${id}`, {
       method: "DELETE",
     });
   }
 
   // Chat
-  async getChatHistory(materialId: string) {
+  async getChatHistory(materialId: string): Promise<any> {
     return this.request(`/chat/${materialId}`);
   }
 
@@ -172,47 +224,47 @@ class ApiClient {
     materialId: string,
     role: "user" | "model",
     text: string
-  ) {
+  ): Promise<any> {
     return this.request(`/chat/${materialId}/messages`, {
       method: "POST",
       body: JSON.stringify({ role, text }),
     });
   }
 
-  async clearChatHistory(materialId: string) {
-    return this.request(`/chat/${materialId}`, {
+  async clearChatHistory(materialId: string): Promise<void> {
+    return this.request<void>(`/chat/${materialId}`, {
       method: "DELETE",
     });
   }
 
   // Quiz
-  async saveQuizResult(resultData: any) {
-    return this.request("/quiz", {
+  async saveQuizResult(resultData: any): Promise<QuizResultResponse> {
+    return this.request<QuizResultResponse>("/quiz", {
       method: "POST",
       body: JSON.stringify(resultData),
     });
   }
 
-  async saveQuizProgress(progressData: any) {
-    return this.request("/quiz/save-progress", {
+  async saveQuizProgress(progressData: any): Promise<QuizResultResponse> {
+    return this.request<QuizResultResponse>("/quiz/save-progress", {
       method: "POST",
       body: JSON.stringify(progressData),
     });
   }
 
-  async resumeQuiz(quizId: string) {
-    return this.request(`/quiz/${quizId}/resume`);
+  async resumeQuiz(quizId: string): Promise<QuizResultResponse> {
+    return this.request<QuizResultResponse>(`/quiz/${quizId}/resume`);
   }
 
-  async getQuizResults(materialId: string) {
-    return this.request(`/quiz/material/${materialId}`);
+  async getQuizResults(materialId: string): Promise<QuizResultResponse[]> {
+    return this.request<QuizResultResponse[]>(`/quiz/material/${materialId}`);
   }
 
-  async getAllQuizResults() {
-    return this.request("/quiz");
+  async getAllQuizResults(): Promise<QuizResultResponse[]> {
+    return this.request<QuizResultResponse[]>("/quiz");
   }
 
-  async getQuizStats() {
+  async getQuizStats(): Promise<any> {
     return this.request("/quiz/stats");
   }
 }

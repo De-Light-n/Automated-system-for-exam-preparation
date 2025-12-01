@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Header } from "./components/Header";
+import { Footer } from "./components/Footer";
 import { FileUpload } from "./components/FileUpload";
 import { Flashcards } from "./components/Flashcards";
 import { Quiz } from "./components/Quiz";
@@ -253,7 +254,7 @@ const App: React.FC = () => {
   // -- Renderers --
 
   const renderHero = () => (
-    <div className="relative flex flex-col items-center justify-center min-h-[calc(100vh-8rem)] px-4 text-center overflow-hidden">
+    <div className="relative flex flex-col items-center justify-center min-h-[calc(100vh-8rem)] px-4 pt-20 text-center overflow-hidden">
       {/* Background blobs */}
       <div className="absolute top-20 -left-20 w-72 h-72 bg-primary/20 rounded-full blur-3xl animate-float"></div>
       <div
@@ -708,7 +709,7 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background font-sans selection:bg-primary/20 selection:text-primary">
+    <div className="min-h-screen bg-background font-sans selection:bg-primary/20 selection:text-primary flex flex-col">
       <Header
         stats={userStats}
         goHome={() => setView("home")}
@@ -719,13 +720,15 @@ const App: React.FC = () => {
         userAvatar={user?.avatar}
       />
 
-      <main className="relative z-0">
+      <main className="relative z-0 flex-1">
         {view === "home" && renderHero()}
         {view === "upload" && (
           <FileUpload onProcessingComplete={handleMaterialProcessed} />
         )}
         {view === "dashboard" && renderDashboard()}
       </main>
+
+      <Footer />
 
       {showAuthModal && <AuthModal onClose={() => setShowAuthModal(false)} />}
     </div>

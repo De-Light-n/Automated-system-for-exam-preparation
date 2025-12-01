@@ -1,50 +1,71 @@
 import express from 'express';
-import fetch from 'node-fetch';
+import { Groq } from 'groq-sdk';
 import dotenv from 'dotenv';
 
 dotenv.config();
 
-const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
-const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY || '';
+const GROQ_API_KEY = process.env.GROQ_API_KEY || '';
+// Available models: llama-3.3-70b-versatile, llama-3.1-8b-instant, qwen/qwen3-32b
+// Use llama-3.3-70b-versatile as fallback if model is not accessible
+const GROQ_MODEL = process.env.GROQ_MODEL || 'llama-3.3-70b-versatile';
 
 const router = express.Router();
 
 router.post('/', async (req, res) => {
   try {
-    const { model, messages, temperature, response_format } = req.body;
+    const { messages, temperature } = req.body;
 
-    if (!OPENROUTER_API_KEY) {
-      return res.status(500).json({ error: 'OpenRouter API key not configured on server' });
+    if (!GROQ_API_KEY) {
+      console.error('❌ GROQ_API_KEY not configured');
+      return res.status(500).json({ error: 'Groq API key not configured on server' });
     }
 
-    const payload: any = {
-      model: model || 'x-ai/grok-4.1-fast',
-      messages,
-      temperature: temperature || 0.7,
-      reasoning: { enabled: true }
-    };
+    if (!messages || !Array.isArray(messages)) {
+      console.error('❌ Invalid messages format:', messages);
+      return res.status(400).json({ error: 'Messages must be an array' });
+    }
 
-    if (response_format) payload.response_format = response_format;
+    const client = new Groq({ apiKey: GROQ_API_KEY });
 
-    const response = await fetch(OPENROUTER_API_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${OPENROUTER_API_KEY}`
-      },
-      body: JSON.stringify(payload)
+    console.log(`🤖 Calling Groq with model: ${GROQ_MODEL}, messages: ${messages.length}`);
+
+    const completion = await client.chat.completions.create({
+      model: GROQ_MODEL,
+      messages: messages,
+      temperature: temperature || 0.6,
+      max_tokens: 4096
     });
 
-    const data = await response.json();
-
-    if (!response.ok) {
-      return res.status(response.status).json({ error: data });
-    }
-
-    res.json(data);
+    console.log('✅ Groq API response successful');
+    res.json(completion);
   } catch (error: any) {
-    console.error('OpenRouter proxy error:', error.message || error);
-    res.status(500).json({ error: error.message || 'Proxy error' });
+    console.error('❌ Groq API error:', {
+      status: error.status,
+      message: error.message,
+      code: error.code,
+      model: GROQ_MODEL,
+      fullError: error
+    });
+    
+    // Provide more helpful error messages
+    if (error.status === 404) {
+      console.error(`Model "${GROQ_MODEL}" returned 404 - may not be accessible`);
+      return res.status(400).json({ 
+        error: `Model "${GROQ_MODEL}" not found or not accessible with this API key.`,
+        suggestion: 'Try using llama-3.3-70b-versatile instead (production model)',
+        availableModels: ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant', 'qwen/qwen3-32b']
+      });
+    }
+    if (error.status === 401 || error.message?.includes('401')) {
+      console.error('Invalid API key or authentication failed');
+      return res.status(401).json({ error: 'Invalid Groq API key. Check GROQ_API_KEY environment variable.' });
+    }
+    if (error.status === 429 || error.message?.includes('429')) {
+      console.error('Rate limited');
+      return res.status(429).json({ error: 'Rate limited by Groq API. Please try again later.' });
+    }
+    
+    res.status(500).json({ error: error.message || 'Groq API error' });
   }
 });
 

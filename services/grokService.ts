@@ -1,79 +1,196 @@
 import { Flashcard, MindMapNode, QuizQuestion, StudyMaterial } from "../types";
 
-const OPENROUTER_API_KEY = import.meta.env.VITE_GROK_API_KEY || "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";
-const OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions";
-// Use the requested model
-const MODEL_NAME = "x-ai/grok-4.1-fast";
+const GROQ_PROXY_URL = "/api/openrouter";
+const MAX_RETRIES = 3;
+const RETRY_DELAY = 1000;
 
-async function callGrokAPI(messages: any[], temperature: number = 0.7, responseFormat?: any) {
+// Token limits for Groq API (qwen model has ~6000 TPM limit on free tier)
+// Actual token ratio is closer to 3-3.5 chars per token for Ukrainian text
+const MAX_INPUT_CHARS = 12000;
+const MAX_CONTENT_CHARS = 8000; // For processContent - more conservative
+const MAX_QUIZ_CONTENT_CHARS = 3000; // For quiz generation - very conservative to avoid rate limit
+
+if (!GROQ_PROXY_URL) {
+  console.error('❌ Groq proxy URL not configured');
+}
+
+// Note: The actual model is configured on the server via GROQ_MODEL env var
+const MODEL_NAME = "qwen/qwen3-32b (or configured server model)";
+
+// Function to truncate text smartly (at sentence boundaries)
+function truncateText(text: string | undefined, maxChars: number): string {
+  if (!text) return '';
+  if (text.length <= maxChars) return text;
+  
+  // Try to cut at sentence boundary
+  const truncated = text.substring(0, maxChars);
+  const lastSentenceEnd = Math.max(
+    truncated.lastIndexOf('.'),
+    truncated.lastIndexOf('!'),
+    truncated.lastIndexOf('?'),
+    truncated.lastIndexOf('\n')
+  );
+  
+  if (lastSentenceEnd > maxChars * 0.7) {
+    return truncated.substring(0, lastSentenceEnd + 1) + '\n\n[Текст скорочено через обмеження API]';
+  }
+  
+  return truncated + '...\n\n[Текст скорочено через обмеження API]';
+}
+
+// Helper function for retry logic with exponential backoff and rate limit handling
+async function withRetry<T>(
+  fn: () => Promise<T>,
+  retries: number = MAX_RETRIES,
+  delay: number = RETRY_DELAY
+): Promise<T> {
+  let lastError: Error | null = null;
+  
+  for (let i = 0; i < retries; i++) {
+    try {
+      return await fn();
+    } catch (error: any) {
+      lastError = error as Error;
+      
+      // Handle rate limit (429) with exponential backoff
+      if (error?.status === 429 || error?.message?.includes('rate_limit')) {
+        const retryAfter = error?.retryAfter || (delay * Math.pow(2, i) / 1000);
+        const waitTime = Math.max(retryAfter * 1000, delay * Math.pow(2, i));
+        console.warn(`⏳ Rate limit 429! Waiting ${(waitTime / 1000).toFixed(1)}s before retry ${i + 1}/${retries}...`);
+        
+        if (i < retries - 1) {
+          await new Promise(resolve => setTimeout(resolve, waitTime));
+        }
+      } else {
+        // For other errors, normal backoff
+        console.warn(`⚠️ Attempt ${i + 1}/${retries} failed:`, error?.message || error);
+        
+        if (i < retries - 1) {
+          await new Promise(resolve => setTimeout(resolve, delay * Math.pow(2, i)));
+        }
+      }
+    }
+  }
+  
+  throw lastError;
+}
+
+// Parse JSON safely from AI response (handles markdown code blocks and XML thinking tags)
+function parseJsonSafely<T>(text: string): T {
+  let cleaned = text.trim();
+  
+  // Remove <think>...</think> tags (Groq's reasoning output)
+  cleaned = cleaned.replace(/<think>[\s\S]*?<\/think>/g, '');
+  
+  cleaned = cleaned.trim();
+  
+  // Remove markdown code blocks if present (```json...``` or ```...```)
+  const codeBlockRegex = /^```(?:json)?\s*\n([\s\S]*)\n```\s*$/;
+  const match = cleaned.match(codeBlockRegex);
+  
+  if (match) {
+    cleaned = match[1].trim();
+  } else if (cleaned.startsWith('```')) {
+    // Fallback for non-standard formatting
+    const lines = cleaned.split('\n');
+    lines.shift(); // Remove first ```json or ``` line
+    
+    // Remove last ``` if present
+    while (lines.length > 0 && lines[lines.length - 1].trim() === '```') {
+      lines.pop();
+    }
+    
+    cleaned = lines.join('\n').trim();
+  }
+  
+  if (!cleaned) {
+    throw new Error('Empty content after removing markdown blocks');
+  }
+  
+  return JSON.parse(cleaned);
+}
+
+async function callGroqAPI(messages: { role: string; content: string }[], temperature: number = 0.6, responseFormat?: { type: string }) {
   const requestBody: any = {
-    model: MODEL_NAME,
     messages,
-    temperature,
-    // enable reasoning to use grok's reasoning features
-    reasoning: { enabled: true }
+    temperature
   };
+
   if (responseFormat) {
     requestBody.response_format = responseFormat;
   }
  
-  console.log('🤖 Calling Grok via OpenRouter...', { model: MODEL_NAME, messageCount: messages.length });
+  console.log('🤖 Calling Groq via proxy...', { 
+    messageCount: messages.length,
+    totalChars: messages.reduce((sum, m) => sum + m.content.length, 0)
+  });
 
-  try {
-    const response = await fetch(OPENROUTER_API_URL, {
+  // Wrap in withRetry to handle rate limits automatically
+  return withRetry(async () => {
+    const response = await fetch(GROQ_PROXY_URL, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
-        'HTTP-Referer': 'https://examninja.app',
-        'X-Title': 'ExamNinja'
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify(requestBody)
     });
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('❌ OpenRouter API Error:', response.status, errorText);
-      if (response.status === 404 && errorText.includes('No endpoints')) {
-        throw new Error(`No endpoints found for model ${MODEL_NAME}. Check OpenRouter / x.ai access and model name. Error: ${errorText}`);
+      const error: any = new Error(`Groq API error (${response.status}): ${errorText.substring(0, 100)}`);
+      error.status = response.status;
+      
+      // Parse retry-after header for rate limits
+      const retryAfter = response.headers.get('retry-after');
+      if (retryAfter) {
+        error.retryAfter = parseInt(retryAfter, 10);
       }
+      
       if (response.status === 401 || response.status === 403) {
-        throw new Error(`Invalid/Unauthorized API key for OpenRouter. Check your VITE_GROK_API_KEY and account subscription. Error: ${errorText}`);
+        throw new Error(`Invalid/Unauthorized API key for Groq`);
       }
-      throw new Error(`OpenRouter API error (${response.status}): ${errorText}`);
+      
+      throw error;
     }
 
-  const data = await response.json();
-    console.log('✅ OpenRouter API response received');
+    const data = await response.json();
+    console.log('✅ Groq API response successful');
     
     if (!data.choices || !data.choices[0] || !data.choices[0].message) {
-      console.error('❌ Invalid response structure:', data);
-      throw new Error('Invalid response from OpenRouter API');
+      throw new Error('Invalid response structure from Groq API');
     }
-    const message = data.choices[0].message;
+    
     return {
-      content: message.content,
-      reasoning_details: message.reasoning_details
+      content: data.choices[0].message.content
     };
-  } catch (error: any) {
-    console.error('❌ API call failed:', error.message);
-    throw error;
-  }
+  });
 }
 
 export const processContent = async (text: string, title: string): Promise<Omit<StudyMaterial, 'id' | 'createdAt'>> => {
   
-  console.log('📝 Processing content...', { textLength: text.length, title });
+  // Validate input
+  if (!text || text.trim().length === 0) {
+    throw new Error('Вміст не може бути порожнім');
+  }
+
+  // Truncate text to stay within token limits
+  const truncatedText = truncateText(text, MAX_CONTENT_CHARS);
+  
+  console.log('📝 Processing content...', { 
+    originalLength: text.length, 
+    truncatedLength: truncatedText.length,
+    title 
+  });
   
   const systemPrompt = `Ти - експертний освітній AI. Проаналізуй текст конспекту українською мовою.
 Твоя задача:
-1. Зробити стислий конспект (Summary) до 500 слів.
-2. Виділити ключові терміни та їх визначення для глосарію (мінімум 10 термінів).
-3. Виділити список з 5-7 ключових фактів.
-4. Створити ієрархічну структуру для ментальної карти (Mind Map) з 3 рівнями.
-5. Створити 10 флеш-карток (питання - відповідь).
+1. Зробити стислий конспект (Summary) до 300 слів.
+2. Виділити ключові терміни та їх визначення для глосарію (5-8 термінів).
+3. Виділити список з 5 ключових фактів.
+4. Створити ієрархічну структуру для ментальної карти (Mind Map) з 2-3 рівнями.
+5. Створити 8 флеш-карток (питання - відповідь).
 
-ВАЖЛИВО: Поверни відповідь ВИКЛЮЧНО у форматі JSON з такою структурою:
+ВАЖЛИВО: Поверни відповідь ВИКЛЮЧНО у форматі JSON:
 {
   "summary": "текст стислого конспекту",
   "glossary": [{"term": "термін", "definition": "визначення"}],
@@ -81,20 +198,12 @@ export const processContent = async (text: string, title: string): Promise<Omit<
   "mindMap": {
     "id": "root",
     "label": "Головна тема",
-    "children": [
-      {
-        "id": "child1",
-        "label": "Підтема 1",
-        "children": [
-          {"id": "subchild1", "label": "Деталь 1"}
-        ]
-      }
-    ]
+    "children": [{"id": "child1", "label": "Підтема", "children": []}]
   },
   "flashcards": [{"question": "питання", "answer": "відповідь"}]
 }`;
 
-  const userPrompt = `Текст конспекту:\n\n${text.substring(0, 30000)}`;
+  const userPrompt = `Текст конспекту:\n\n${truncatedText}`;
 
   try {
     const messages = [
@@ -102,22 +211,29 @@ export const processContent = async (text: string, title: string): Promise<Omit<
       { role: 'user', content: userPrompt }
     ];
 
-  const responseObj = await callGrokAPI(messages, 0.7);
-  console.log('📦 Parsing Grok response...', { reasoning: !!responseObj.reasoning_details });
+    // Use retry logic for reliability
+    const responseObj = await withRetry(() => callGroqAPI(messages, 0.7));
+    console.log('📦 Parsing Groq response...');
     
-  const responseText = typeof responseObj === 'string' ? responseObj : responseObj.content;
-  const data = JSON.parse(responseText);
+    const responseText = typeof responseObj === 'string' ? responseObj : responseObj.content;
+    const data = parseJsonSafely<{
+      summary: string;
+      glossary: { term: string; definition: string }[];
+      keyFacts: string[];
+      mindMap: MindMapNode;
+      flashcards: { question: string; answer: string }[];
+    }>(responseText);
     
     if (!data.summary || !data.glossary || !data.keyFacts || !data.mindMap || !data.flashcards) {
       console.error('❌ Missing required fields in response:', Object.keys(data));
       throw new Error('Incomplete data from AI');
     }
     
-    const processedFlashcards: Flashcard[] = data.flashcards.map((fc: any, index: number) => ({
+    const processedFlashcards: Flashcard[] = data.flashcards.map((fc, index: number) => ({
       id: `fc-${Date.now()}-${index}`,
       question: fc.question,
       answer: fc.answer,
-      status: 'new'
+      status: 'new' as const
     }));
 
     console.log('✅ Content processed successfully');
@@ -132,36 +248,36 @@ export const processContent = async (text: string, title: string): Promise<Omit<
       flashcards: processedFlashcards
     };
 
-  } catch (error: any) {
-    console.error("❌ Error processing content:", error);
-    throw new Error(`Не вдалося обробити матеріал: ${error.message}`);
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    console.error("❌ Error processing content:", errorMessage);
+    throw new Error(`Не вдалося обробити матеріал: ${errorMessage}`);
   }
 };
 
 export const generateQuiz = async (content: string, difficulty: string = 'medium'): Promise<QuizQuestion[]> => {
-  const systemPrompt = `Створи тест з 7-10 питань на основі тексту. Рівень складності: ${difficulty}.
+  // Validate input
+  if (!content || content.trim().length === 0) {
+    throw new Error('Вміст для генерації тесту не може бути порожнім');
+  }
+
+  // Use MUCH smaller truncation for quiz to avoid rate limiting
+  // Quiz generation happens right after content processing, so we're already using tokens
+  const truncatedContent = truncateText(content, MAX_QUIZ_CONTENT_CHARS);
+  
+  // Determine question count based on difficulty
+  const questionCount = difficulty === 'easy' ? 10 : difficulty === 'hard' ? 15 : 12;
+  
+  const systemPrompt = `Ти - експертний тестувальник. Створи ${questionCount} питань на основі КОРОТКИХ ключових пунктів.
+Рівень: ${difficulty === 'easy' ? 'легкий (базові концепції)' : difficulty === 'hard' ? 'важкий (глибокі знання, суперечливі теми)' : 'середній'}.
 Мова: Українська.
 
-Типи питань (використовуй різноманітні):
-1. multiple_choice: Класичне питання з 4 варіантами відповіді.
-2. true_false: Твердження, де варіанти відповіді ["Так", "Ні"].
-3. fill_in_the_blank: Речення з пропущеним ключовим словом. Познач пропуск як "______".
+ТИПИ: 1) multiple_choice (4 варіанти), 2) true_false (Так/Ні)
 
-Додай детальне пояснення (explanation) до правильної відповіді.
+Поверни ТІЛЬКИ JSON масив:
+[{"id":"q1","type":"multiple_choice","question":"?","options":["A","B","C","D"],"correctAnswer":"A","explanation":"..."}]`;
 
-ВАЖЛИВО: Поверни масив об'єктів у JSON форматі:
-[
-  {
-    "id": "q1",
-    "type": "multiple_choice",
-    "question": "Текст питання?",
-    "options": ["Варіант 1", "Варіант 2", "Варіант 3", "Варіант 4"],
-    "correctAnswer": "Варіант 1",
-    "explanation": "Пояснення чому це правильна відповідь"
-  }
-]`;
-
-  const userPrompt = `Текст для тесту:\n\n${content.substring(0, 30000)}`;
+  const userPrompt = `КЛЮЧОВІ ПУНКТИ:\n${truncatedContent}`;
 
   try {
     const messages = [
@@ -169,21 +285,22 @@ export const generateQuiz = async (content: string, difficulty: string = 'medium
       { role: 'user', content: userPrompt }
     ];
 
-  const responseObj = await callGrokAPI(messages, 0.8, { type: 'json_object' });
+    const responseObj = await callGroqAPI(messages, 0.7);
     
-    // Grok може повернути об'єкт з масивом всередині
-    let questions;
+    let questions: QuizQuestion[] = [];
     try {
       const raw = typeof responseObj === 'string' ? responseObj : responseObj.content;
-      const parsed = JSON.parse(raw);
+      const parsed = parseJsonSafely<any>(raw);
       questions = Array.isArray(parsed) ? parsed : (parsed.questions || parsed.quiz || []);
-    } catch {
+    } catch (parseError) {
+      console.error("❌ JSON parse error in quiz generation:", (parseError as Error).message);
+      console.log("Raw response was:", responseObj);
       questions = [];
     }
 
     return questions;
   } catch (error) {
-    console.error("Quiz gen error", error);
+    console.error("❌ Quiz generation error:", error);
     return [];
   }
 };
@@ -191,7 +308,7 @@ export const generateQuiz = async (content: string, difficulty: string = 'medium
 // Grok chat implementation
 class GrokChat {
   private context: string;
-  private conversationHistory: Array<{role: string, content: string, reasoning_details?: any}> = [];
+  private conversationHistory: Array<{role: string, content: string}> = [];
 
   constructor(context: string) {
     this.context = context;
@@ -215,13 +332,12 @@ ${context.substring(0, 30000)}`
     });
 
     try {
-  const responseObj = await callGrokAPI(this.conversationHistory, 0.7);
+  const responseObj = await callGroqAPI(this.conversationHistory, 0.7);
   const responseText = typeof responseObj === 'string' ? responseObj : responseObj.content;
       
       this.conversationHistory.push({
         role: 'assistant',
-        content: responseText,
-        reasoning_details: (responseObj as any).reasoning_details
+        content: responseText
       });
 
       // Keep conversation history manageable (last 10 messages)
@@ -232,7 +348,7 @@ ${context.substring(0, 30000)}`
         ];
       }
 
-  return { text: responseText };
+      return { text: responseText };
     } catch (error) {
       console.error('Grok chat error:', error);
       return { text: 'Вибачте, виникла помилка при обробці вашого повідомлення.' };
@@ -259,7 +375,7 @@ export const explainConcept = async (concept: string, context: string): Promise<
   ];
 
   try {
-    const responseObj = await callGrokAPI(messages, 0.7);
+    const responseObj = await callGroqAPI(messages, 0.7);
     const responseText = typeof responseObj === 'string' ? responseObj : responseObj.content;
     return responseText || "Не вдалося пояснити.";
   } catch (error) {

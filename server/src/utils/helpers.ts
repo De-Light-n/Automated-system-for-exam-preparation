@@ -1,14 +1,31 @@
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your_super_secret_jwt_key';
+const JWT_SECRET = process.env.JWT_SECRET;
+const BCRYPT_ROUNDS = 12;
 
 export const generateToken = (userId: string): string => {
-  return jwt.sign({ userId }, JWT_SECRET, { expiresIn: '30d' });
+  if (!JWT_SECRET) {
+    throw new Error('JWT_SECRET is not configured');
+  }
+  // Default: 30 days in seconds
+  const expiresInSeconds = parseInt(process.env.JWT_EXPIRES_IN_SECONDS || '2592000', 10);
+  return jwt.sign({ userId }, JWT_SECRET, { expiresIn: expiresInSeconds });
+};
+
+export const verifyToken = (token: string): { userId: string } | null => {
+  if (!JWT_SECRET) {
+    throw new Error('JWT_SECRET is not configured');
+  }
+  try {
+    return jwt.verify(token, JWT_SECRET) as { userId: string };
+  } catch {
+    return null;
+  }
 };
 
 export const hashPassword = async (password: string): Promise<string> => {
-  return await bcrypt.hash(password, 10);
+  return await bcrypt.hash(password, BCRYPT_ROUNDS);
 };
 
 export const comparePassword = async (password: string, hashedPassword: string): Promise<boolean> => {
@@ -46,4 +63,12 @@ export const updateStreak = (lastActiveDate?: Date): { streak: number; lastActiv
     // Streak broken
     return { streak: 1, lastActiveDate: now };
   }
+};
+
+// Sanitize user input
+export const sanitizeInput = (input: string): string => {
+  return input
+    .trim()
+    .replace(/[<>]/g, '') // Remove potential HTML tags
+    .slice(0, 10000); // Limit length
 };

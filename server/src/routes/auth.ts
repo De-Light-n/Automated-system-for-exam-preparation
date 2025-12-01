@@ -1,16 +1,28 @@
-import express from 'express';
-import { body } from 'express-validator';
-import { User } from '../models/User.js';
-import { generateToken, hashPassword, comparePassword } from '../utils/helpers.js';
+import express from "express";
+import { body } from "express-validator";
+import passport from "passport";
+import { User } from "../models/User.js";
+import {
+  generateToken,
+  hashPassword,
+  comparePassword,
+} from "../utils/helpers.js";
+import { authenticateToken } from "../middleware/auth.js";
 
 const router = express.Router();
 
 // Register
-router.post('/register',
+router.post(
+  "/register",
   [
-    body('email').isEmail().withMessage('Невірний email'),
-    body('password').isLength({ min: 6 }).withMessage('Пароль повинен містити мінімум 6 символів'),
-    body('username').trim().notEmpty().withMessage('Ім\'я користувача обов\'язкове')
+    body("email").isEmail().withMessage("Невірний email"),
+    body("password")
+      .isLength({ min: 6 })
+      .withMessage("Пароль повинен містити мінімум 6 символів"),
+    body("username")
+      .trim()
+      .notEmpty()
+      .withMessage("Ім'я користувача обов'язкове"),
   ],
   async (req, res) => {
     try {
@@ -19,7 +31,9 @@ router.post('/register',
       // Check if user exists
       const existingUser = await User.findOne({ email });
       if (existingUser) {
-        return res.status(400).json({ error: 'Користувач з таким email вже існує' });
+        return res
+          .status(400)
+          .json({ error: "Користувач з таким email вже існує" });
       }
 
       // Hash password
@@ -32,12 +46,12 @@ router.post('/register',
         username,
         stats: {
           xp: 0,
-          level: 'Студент',
+          level: "Студент",
           streak: 0,
           achievements: [],
           cardsLearned: 0,
-          testsPassed: 0
-        }
+          testsPassed: 0,
+        },
       });
 
       await user.save();
@@ -51,21 +65,22 @@ router.post('/register',
           id: user._id,
           email: user.email,
           username: user.username,
-          stats: user.stats
-        }
+          stats: user.stats,
+        },
       });
     } catch (error) {
-      console.error('Register error:', error);
-      res.status(500).json({ error: 'Помилка при реєстрації' });
+      console.error("Register error:", error);
+      res.status(500).json({ error: "Помилка при реєстрації" });
     }
   }
 );
 
 // Login
-router.post('/login',
+router.post(
+  "/login",
   [
-    body('email').isEmail().withMessage('Невірний email'),
-    body('password').notEmpty().withMessage('Пароль обов\'язковий')
+    body("email").isEmail().withMessage("Невірний email"),
+    body("password").notEmpty().withMessage("Пароль обов'язковий"),
   ],
   async (req, res) => {
     try {
@@ -74,13 +89,13 @@ router.post('/login',
       // Find user
       const user = await User.findOne({ email });
       if (!user) {
-        return res.status(401).json({ error: 'Невірний email або пароль' });
+        return res.status(401).json({ error: "Невірний email або пароль" });
       }
 
       // Check password
       const isPasswordValid = await comparePassword(password, user.password);
       if (!isPasswordValid) {
-        return res.status(401).json({ error: 'Невірний email або пароль' });
+        return res.status(401).json({ error: "Невірний email або пароль" });
       }
 
       // Generate token
@@ -92,12 +107,65 @@ router.post('/login',
           id: user._id,
           email: user.email,
           username: user.username,
-          stats: user.stats
-        }
+          avatar: user.avatar,
+          stats: user.stats,
+        },
       });
     } catch (error) {
-      console.error('Login error:', error);
-      res.status(500).json({ error: 'Помилка при вході' });
+      console.error("Login error:", error);
+      res.status(500).json({ error: "Помилка при вході" });
+    }
+  }
+);
+
+// Get Profile (protected route)
+router.get("/profile", authenticateToken, async (req: any, res) => {
+  try {
+    const user = await User.findById(req.userId).select("-password");
+    if (!user) {
+      return res.status(404).json({ error: "Користувача не знайдено" });
+    }
+
+    res.json({
+      id: user._id,
+      email: user.email,
+      username: user.username,
+      avatar: user.avatar,
+      stats: user.stats,
+    });
+  } catch (error) {
+    console.error("Profile error:", error);
+    res.status(500).json({ error: "Помилка при отриманні профілю" });
+  }
+});
+
+// Google OAuth - Redirect to Google
+router.get(
+  "/google",
+  passport.authenticate("google", {
+    scope: ["profile", "email"],
+    session: false,
+  })
+);
+
+// Google OAuth - Callback
+router.get(
+  "/google/callback",
+  passport.authenticate("google", {
+    session: false,
+    failureRedirect: "/login",
+  }),
+  async (req: any, res) => {
+    try {
+      const user = req.user;
+      const token = generateToken(user._id.toString());
+
+      // Redirect to frontend with token
+      const frontendURL = process.env.FRONTEND_URL || "http://localhost:3000";
+      res.redirect(`${frontendURL}/auth/callback?token=${token}`);
+    } catch (error) {
+      console.error("Google callback error:", error);
+      res.redirect("/login?error=auth_failed");
     }
   }
 );

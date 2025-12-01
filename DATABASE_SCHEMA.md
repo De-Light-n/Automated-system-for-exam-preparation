@@ -133,39 +133,44 @@ interface QuizResult {
   materialId: ObjectId; // Матеріал/тема (ref: StudyMaterial)
 
   // Результати
-  score: number; // Набрані бали
-  maxScore: number; // Максимальні бали
-  scorePercentage: number; // Відсоток правильних відповідей
-
-  // Деталі тесту
-  questions: Array<{
-    question: string;
-    userAnswer: string[]; // Відповідь користувача (масив для множинного вибору)
-    correctAnswer: string[]; // Правильна відповідь
-    isCorrect: boolean;
-    timeSpent?: number; // Час на питання (секунди)
-  }>;
-
   totalQuestions: number;
   correctAnswers: number;
-  wrongAnswers: number;
+  scorePercentage: number; // Відсоток правильних відповідей
+  feedback: string; // Загальний фідбек по результатах
 
-  // Метадані
-  timeSpent: number; // Загальний час (секунди)
-  difficulty: "easy" | "medium" | "hard";
-  quizType: "practice" | "exam" | "quick";
+  // Деталі тесту
+  answers: Array<{
+    questionId: string;
+    question: string; // Текст питання
+    options: string[]; // Варіанти відповідей
+    userAnswer: string | string[]; // Відповідь користувача
+    correctAnswer: string | string[]; // Правильна відповідь
+    isCorrect: boolean;
+  }>;
+
+  // Поля для незавершених тестів (можливість повернутися)
+  isCompleted: boolean; // true - тест завершено, false - в процесі
+  currentQuestionIndex: number; // Поточне питання (для продовження)
 
   // Системні поля
   createdAt: Date;
-  completedAt: Date;
+  updatedAt: Date;
+  completedAt?: Date; // Заповнюється тільки при завершенні
 }
 ```
 
 **Індекси:**
 
-- `{ userId: 1, materialId: 1, createdAt: -1 }` - історія тестів по темі
-- `{ userId: 1, createdAt: -1 }` - всі тести користувача
+- `{ userId: 1, materialId: 1, updatedAt: -1 }` - історія тестів по темі
+- `{ userId: 1, isCompleted: 1 }` - незавершені тести користувача
+- `{ userId: 1, updatedAt: -1 }` - всі тести користувача
 - `{ materialId: 1 }` - статистика по матеріалу
+
+**Важливі зв'язки:**
+
+- Кожен тест **обов'язково** пов'язаний з конкретним `materialId` (темою)
+- Користувач може мати кілька тестів (завершених та незавершених) по одній темі
+- Незавершені тести (`isCompleted: false`) дозволяють продовжити проходження
 
 ---
 
@@ -252,11 +257,41 @@ interface FlashcardProgress {
 ```
 User (1)
   ├── StudyMaterials (n)
-  │     ├── QuizResults (n)
-  │     └── ChatHistory (n)
-  ├── QuizResults (n) [для швидкого доступу]
-  └── ChatHistory (n) [для швидкого доступу]
+  │     ├── Flashcards [embedded] - картки для повторення
+  │     ├── MindMap [embedded] - ментальна карта теми
+  │     ├── Glossary [embedded] - глосарій термінів
+  │     ├── QuizResults (n) - всі тести по цій темі
+  │     └── ChatHistory (n) - історія чатів по темі
+  ├── QuizResults (n) [для швидкого доступу до всіх тестів]
+  └── ChatHistory (n) [для швидкого доступу до всіх чатів]
 ```
+
+### Функціональні зв'язки:
+
+**Тема (StudyMaterial) → Тести (QuizResults):**
+
+- Користувач може мати кілька тестів по одній темі
+- Незавершені тести зберігаються з `isCompleted: false`
+- Користувач може продовжити незавершений тест
+- Історія завершених тестів зберігається для перегляду прогресу
+
+**Тема → Флеш-картки (Flashcards):**
+
+- Картки зберігаються всередині теми (embedded)
+- Кожна картка має статус: new, learning, mastered
+- Алгоритм інтервальних повторень відстежує `nextReview`
+
+**Тема → Ментальна карта (MindMap):**
+
+- Візуалізація структури теми
+- Зберігається як вкладений об'єкт з нодами та зв'язками
+
+**Тема → Глосарій (Glossary):**
+
+- Список термінів та їх визначень
+- Embedded в темі для швидкого доступу
+
+````
 
 ### Типові запити:
 
@@ -269,7 +304,7 @@ db.studyMaterials
     isArchived: false,
   })
   .sort({ createdAt: -1 });
-```
+````
 
 #### 2. Отримати конкретний матеріал з історією чатів
 
@@ -287,15 +322,34 @@ const chats = await db.chatHistory
   .sort({ updatedAt: -1 });
 ```
 
-#### 3. Отримати результати тестів по темі
+#### 3. Отримати результати тестів по темі (включаючи незавершені)
 
 ```javascript
+// Всі тести по темі
 db.quizResults
   .find({
     userId: ObjectId("..."),
     materialId: ObjectId("..."),
   })
-  .sort({ createdAt: -1 });
+  .sort({ updatedAt: -1 });
+
+// Тільки незавершені тести
+db.quizResults
+  .find({
+    userId: ObjectId("..."),
+    materialId: ObjectId("..."),
+    isCompleted: false,
+  })
+  .sort({ updatedAt: -1 });
+
+// Тільки завершені тести
+db.quizResults
+  .find({
+    userId: ObjectId("..."),
+    materialId: ObjectId("..."),
+    isCompleted: true,
+  })
+  .sort({ completedAt: -1 });
 ```
 
 #### 4. Отримати картки для повторення сьогодні

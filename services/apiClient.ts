@@ -193,6 +193,17 @@ class ApiClient {
     });
   }
 
+  async saveQuizProgress(progressData: any) {
+    return this.request("/quiz/save-progress", {
+      method: "POST",
+      body: JSON.stringify(progressData),
+    });
+  }
+
+  async resumeQuiz(quizId: string) {
+    return this.request(`/quiz/${quizId}/resume`);
+  }
+
   async getQuizResults(materialId: string) {
     return this.request(`/quiz/material/${materialId}`);
   }

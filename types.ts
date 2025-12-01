@@ -1,9 +1,8 @@
-
 export enum UserLevel {
-  STUDENT = 'Студент',
-  BACHELOR = 'Бакалавр',
-  MASTER = 'Магістр',
-  PROFESSOR = 'Професор'
+  STUDENT = "Студент",
+  BACHELOR = "Бакалавр",
+  MASTER = "Магістр",
+  PROFESSOR = "Професор",
 }
 
 export interface UserStats {
@@ -19,13 +18,13 @@ export interface Flashcard {
   id: string;
   question: string;
   answer: string;
-  status: 'new' | 'learning' | 'mastered';
+  status: "new" | "learning" | "mastered";
   nextReview?: number; // timestamp
 }
 
 export interface QuizQuestion {
   id: string;
-  type: 'multiple_choice' | 'true_false' | 'fill_in_the_blank';
+  type: "multiple_choice" | "true_false" | "fill_in_the_blank";
   question: string;
   options?: string[];
   correctAnswer: string;
@@ -39,7 +38,7 @@ export interface QuizResult {
   feedback: string;
   recommendations: string[];
   // Added for review mode
-  userAnswers?: Record<string, string>; 
+  userAnswers?: Record<string, string>;
   questions?: QuizQuestion[];
 }
 
@@ -63,10 +62,17 @@ export interface StudyMaterial {
 
 export interface ChatMessage {
   id: string;
-  role: 'user' | 'model';
+  role: "user" | "model";
   text: string;
   timestamp: number;
 }
 
-export type ViewMode = 'home' | 'upload' | 'dashboard';
-export type DashboardTab = 'overview' | 'flashcards' | 'quiz' | 'mindmap' | 'glossary' | 'chat';
+export type ViewMode = "home" | "upload" | "dashboard";
+export type DashboardTab =
+  | "overview"
+  | "flashcards"
+  | "quiz"
+  | "quiz-history"
+  | "mindmap"
+  | "glossary"
+  | "chat";

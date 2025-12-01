@@ -4,6 +4,7 @@ import { Footer } from "./components/Footer";
 import { FileUpload } from "./components/FileUpload";
 import { Flashcards } from "./components/Flashcards";
 import { Quiz } from "./components/Quiz";
+import { QuizHistory } from "./components/QuizHistory";
 import { MindMap } from "./components/MindMap";
 import { Glossary } from "./components/Glossary";
 import { Chat } from "./components/Chat";
@@ -52,6 +53,9 @@ const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<DashboardTab>("overview");
   const [material, setMaterial] = useState<StudyMaterial | null>(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [resumeQuizId, setResumeQuizId] = useState<string | undefined>(
+    undefined
+  );
   const [userStats, setUserStats] = useState<UserStats>({
     xp: user?.stats?.xp || 120,
     level: user?.stats?.level || UserLevel.STUDENT,
@@ -524,7 +528,7 @@ const App: React.FC = () => {
     const tabs: { id: DashboardTab; label: string; icon: React.FC<any> }[] = [
       { id: "overview", label: "Огляд", icon: LayoutDashboard },
       { id: "flashcards", label: "Картки", icon: Sparkles },
-      { id: "quiz", label: "Тест", icon: BookOpen },
+      { id: "quiz-history", label: "Тести", icon: BookOpen },
       { id: "mindmap", label: "Карта", icon: Brain },
       { id: "glossary", label: "Глосарій", icon: List },
       { id: "chat", label: "Чат", icon: MessageCircle },
@@ -587,16 +591,20 @@ const App: React.FC = () => {
             <div className="md:col-span-1 lg:col-span-1 space-y-6">
               {/* Action: Quiz */}
               <div
-                onClick={() => setActiveTab("quiz")}
+                onClick={() => setActiveTab("quiz-history")}
                 className="group bg-gradient-to-br from-indigo-600 to-violet-700 rounded-3xl p-6 text-white shadow-xl shadow-indigo-200 relative overflow-hidden cursor-pointer transition-transform hover:scale-[1.02]"
               >
                 <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-10 -mt-10 blur-2xl group-hover:bg-white/20 transition-all"></div>
                 <BookOpen className="w-8 h-8 mb-4 relative z-10" />
                 <h3 className="text-xl font-bold font-heading relative z-10">
-                  Пройти тест
+                  Тести
                 </h3>
+                <p className="text-sm opacity-90 relative z-10 mb-2">
+                  Перевір свої знання
+                </p>
                 <div className="mt-4 flex items-center gap-2 text-xs font-bold uppercase tracking-wider opacity-80">
-                  <span>Start Quiz</span> <ChevronRight className="w-3 h-3" />
+                  <span>Переглянути тести</span>{" "}
+                  <ChevronRight className="w-3 h-3" />
                 </div>
               </div>
 
@@ -618,6 +626,24 @@ const App: React.FC = () => {
                 </h3>
                 <p className="text-sm text-slate-500">
                   Тренуй пам'ять за допомогою інтервальних повторень.
+                </p>
+              </div>
+
+              {/* Action: Mind Map */}
+              <div
+                onClick={() => setActiveTab("mindmap")}
+                className="group bg-white rounded-3xl p-6 border border-slate-200 shadow-sm hover:border-primary/50 cursor-pointer transition-all"
+              >
+                <div className="flex justify-between items-start mb-4">
+                  <div className="p-2 bg-purple-50 rounded-xl text-purple-600">
+                    <Brain className="w-6 h-6" />
+                  </div>
+                </div>
+                <h3 className="text-lg font-bold text-slate-800 mb-1">
+                  Ментальна карта
+                </h3>
+                <p className="text-sm text-slate-500">
+                  Візуалізуй зв'язки між темами.
                 </p>
               </div>
 
@@ -667,8 +693,27 @@ const App: React.FC = () => {
         return (
           <Quiz
             content={material.originalContent}
+            materialId={material.id}
+            resumeQuizId={resumeQuizId}
             onFinish={handleQuizFinish}
-            onBack={() => setActiveTab("overview")}
+            onBack={() => {
+              setActiveTab("quiz-history");
+              setResumeQuizId(undefined);
+            }}
+          />
+        );
+      case "quiz-history":
+        return (
+          <QuizHistory
+            materialId={material.id}
+            onResumeQuiz={(quizId) => {
+              setResumeQuizId(quizId);
+              setActiveTab("quiz");
+            }}
+            onStartNewQuiz={() => {
+              setResumeQuizId(undefined);
+              setActiveTab("quiz");
+            }}
           />
         );
       case "mindmap":

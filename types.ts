@@ -78,6 +78,7 @@ export type ViewMode = "home" | "upload" | "dashboard";
 export type DashboardTab =
   | "overview"
   | "stats"
+  | "materials"
   | "flashcards"
   | "quiz"
   | "quiz-history"

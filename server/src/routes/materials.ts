@@ -1,12 +1,12 @@
 import express from "express";
 import path from "path";
 import fs from "fs";
-const multer = require("multer");
+import multer from "multer";
 import { authMiddleware, AuthRequest } from "../middleware/auth.js";
 import { StudyMaterial } from "../models/StudyMaterial.js";
 
 interface UploadRequest extends AuthRequest {
-  file?: any;
+  file?: Express.Multer.File;
 }
 const router = express.Router();
 
@@ -49,10 +49,18 @@ if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
 const storage = multer.diskStorage({
-  destination: function (req: any, file: any, cb: any) {
+  destination: function (
+    req: express.Request,
+    file: Express.Multer.File,
+    cb: (err: Error | null, destination: string) => void,
+  ) {
     cb(null, uploadDir);
   },
-  filename: function (req: any, file: any, cb: any) {
+  filename: function (
+    req: express.Request,
+    file: Express.Multer.File,
+    cb: (err: Error | null, filename: string) => void,
+  ) {
     const unique = Date.now() + "-" + Math.random().toString(36).slice(2, 9);
     cb(null, `${unique}-${file.originalname.replace(/[^a-zA-Z0-9.-_]/g, "_")}`);
   },

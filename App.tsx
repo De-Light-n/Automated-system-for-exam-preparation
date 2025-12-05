@@ -11,6 +11,7 @@ import { Chat } from "./components/Chat";
 import { AuthModal } from "./components/AuthModal";
 import { AuthCallback } from "./components/AuthCallback";
 import { StatsDashboard } from "./components/StatsDashboard";
+import { MaterialsList } from "./components/MaterialsList";
 import {
   FlashcardPreview,
   QuizPreview,
@@ -56,6 +57,7 @@ import {
   Clock,
   LogIn,
   BarChart3,
+  FolderOpen,
 } from "lucide-react";
 import { api } from "./services/apiClient";
 
@@ -535,6 +537,7 @@ const App: React.FC = () => {
   const renderDashboardNavigation = () => {
     const tabs: { id: DashboardTab; label: string; icon: React.FC<any> }[] = [
       { id: "overview", label: "Огляд", icon: LayoutDashboard },
+      { id: "materials", label: "Матеріали", icon: FolderOpen },
       { id: "stats", label: "Статистика", icon: BarChart3 },
       { id: "flashcards", label: "Картки", icon: Sparkles },
       { id: "quiz-history", label: "Тести", icon: BookOpen },
@@ -582,6 +585,17 @@ const App: React.FC = () => {
     switch (activeTab) {
       case "stats":
         return <StatsDashboard stats={userStats} materialCount={1} />;
+      case "materials":
+        return (
+          <MaterialsList
+            currentMaterialId={material?.id}
+            onSelectMaterial={(selectedMaterial) => {
+              setMaterial(selectedMaterial);
+              setActiveTab("overview");
+            }}
+            onBack={() => setView("upload")}
+          />
+        );
       case "overview":
         return (
           <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6 animate-in slide-in-from-bottom-4 duration-500">

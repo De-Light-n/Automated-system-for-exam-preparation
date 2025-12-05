@@ -93,7 +93,7 @@ class ApiClient {
 
   private async request<T>(
     endpoint: string,
-    options: RequestInit = {}
+    options: RequestInit = {},
   ): Promise<T> {
     const response = await fetch(`${API_URL}${endpoint}`, {
       ...options,
@@ -114,7 +114,7 @@ class ApiClient {
   async register(
     email: string,
     password: string,
-    username: string
+    username: string,
   ): Promise<AuthResponse> {
     const data = await this.request<AuthResponse>("/auth/register", {
       method: "POST",
@@ -184,6 +184,33 @@ class ApiClient {
   }
 
   async createMaterial(materialData: any): Promise<MaterialResponse> {
+    // If `materialData.file` is a File object, send it as multipart/form-data
+    if (materialData && materialData.file instanceof File) {
+      const form = new FormData();
+      // Append JSON fields
+      for (const k of Object.keys(materialData)) {
+        if (k === "file") continue;
+        const v = (materialData as any)[k];
+        form.append(k, typeof v === "string" ? v : JSON.stringify(v));
+      }
+      form.append("file", materialData.file);
+
+      const headers: HeadersInit = {};
+      if (this.token) headers["Authorization"] = `Bearer ${this.token}`;
+      const response = await fetch(`${API_URL}/materials`, {
+        method: "POST",
+        headers,
+        body: form,
+      });
+      if (!response.ok) {
+        const error = await response
+          .json()
+          .catch(() => ({ error: "Network error" }));
+        throw new Error(error.error || "Щось пішло не так");
+      }
+      return response.json();
+    }
+
     return this.request<MaterialResponse>("/materials", {
       method: "POST",
       body: JSON.stringify(materialData),
@@ -201,18 +228,31 @@ class ApiClient {
     materialId: string,
     cardId: string,
     status: string,
-    nextReview?: number
+    nextReview?: number,
   ): Promise<MaterialResponse> {
-    return this.request<MaterialResponse>(`/materials/${materialId}/flashcards/${cardId}`, {
-      method: "PATCH",
-      body: JSON.stringify({ status, nextReview }),
-    });
+    return this.request<MaterialResponse>(
+      `/materials/${materialId}/flashcards/${cardId}`,
+      {
+        method: "PATCH",
+        body: JSON.stringify({ status, nextReview }),
+      },
+    );
   }
 
   async deleteMaterial(id: string): Promise<void> {
     return this.request<void>(`/materials/${id}`, {
       method: "DELETE",
     });
+  }
+
+  async downloadMaterialFile(id: string): Promise<Blob> {
+    const headers: HeadersInit = {};
+    if (this.token) headers["Authorization"] = `Bearer ${this.token}`;
+    const res = await fetch(`${API_URL}/materials/${id}/file`, { headers });
+    if (!res.ok) {
+      throw new Error("Failed to download file");
+    }
+    return await res.blob();
   }
 
   // Chat
@@ -223,7 +263,7 @@ class ApiClient {
   async addChatMessage(
     materialId: string,
     role: "user" | "model",
-    text: string
+    text: string,
   ): Promise<any> {
     return this.request(`/chat/${materialId}/messages`, {
       method: "POST",

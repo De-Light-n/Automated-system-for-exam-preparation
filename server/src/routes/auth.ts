@@ -1,4 +1,4 @@
-import express from "express";
+import express, { Request, Response } from "express";
 import { body } from "express-validator";
 import passport from "passport";
 import { User } from "../models/User.js";
@@ -24,7 +24,7 @@ router.post(
       .notEmpty()
       .withMessage("Ім'я користувача обов'язкове"),
   ],
-  async (req, res) => {
+  async (req: Request, res: Response) => {
     try {
       const { email, password, username } = req.body;
 
@@ -72,7 +72,7 @@ router.post(
       console.error("Register error:", error);
       res.status(500).json({ error: "Помилка при реєстрації" });
     }
-  }
+  },
 );
 
 // Login
@@ -82,7 +82,7 @@ router.post(
     body("email").isEmail().withMessage("Невірний email"),
     body("password").notEmpty().withMessage("Пароль обов'язковий"),
   ],
-  async (req, res) => {
+  async (req: Request, res: Response) => {
     try {
       const { email, password } = req.body;
 
@@ -115,11 +115,11 @@ router.post(
       console.error("Login error:", error);
       res.status(500).json({ error: "Помилка при вході" });
     }
-  }
+  },
 );
 
 // Get Profile (protected route)
-router.get("/profile", authenticateToken, async (req: any, res) => {
+router.get("/profile", authenticateToken, async (req: any, res: Response) => {
   try {
     const user = await User.findById(req.userId).select("-password");
     if (!user) {
@@ -145,7 +145,7 @@ router.get(
   passport.authenticate("google", {
     scope: ["profile", "email"],
     session: false,
-  })
+  }),
 );
 
 // Google OAuth - Callback
@@ -155,7 +155,7 @@ router.get(
     session: false,
     failureRedirect: "/login",
   }),
-  async (req: any, res) => {
+  async (req: any, res: Response) => {
     try {
       const user = req.user;
       const token = generateToken(user._id.toString());
@@ -167,7 +167,7 @@ router.get(
       console.error("Google callback error:", error);
       res.redirect("/login?error=auth_failed");
     }
-  }
+  },
 );
 
 export default router;

@@ -58,6 +58,12 @@ export interface StudyMaterial {
   mindMap: MindMapNode;
   flashcards: Flashcard[];
   createdAt: number;
+  file?: {
+    originalName?: string;
+    mime?: string;
+    size?: number;
+    path?: string;
+  };
 }
 
 export interface ChatMessage {
@@ -65,6 +71,7 @@ export interface ChatMessage {
   role: "user" | "model";
   text: string;
   timestamp: number;
+  synced?: boolean; // indicates if message was persisted to backend
 }
 
 export type ViewMode = "home" | "upload" | "dashboard";

@@ -11,7 +11,12 @@ import { Chat } from "./components/Chat";
 import { AuthModal } from "./components/AuthModal";
 import { AuthCallback } from "./components/AuthCallback";
 import { StatsDashboard } from "./components/StatsDashboard";
-import { FlashcardPreview, QuizPreview, MindMapPreview, ChatPreview } from "./components/FeaturePreviews";
+import {
+  FlashcardPreview,
+  QuizPreview,
+  MindMapPreview,
+  ChatPreview,
+} from "./components/FeaturePreviews";
 import { useAuth } from "./context/AuthContext";
 import {
   StudyMaterial,
@@ -73,10 +78,10 @@ const App: React.FC = () => {
 
   // -- State --
   const [view, setView] = useState<ViewMode>("home");
-  
+
   // Handle OAuth callback
   const isAuthCallback = window.location.pathname === "/auth/callback";
-  
+
   // Early return for auth callback (after all hooks)
   if (isAuthCallback) {
     return <AuthCallback />;
@@ -85,7 +90,7 @@ const App: React.FC = () => {
   const [material, setMaterial] = useState<StudyMaterial | null>(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [resumeQuizId, setResumeQuizId] = useState<string | undefined>(
-    undefined
+    undefined,
   );
   const [userStats, setUserStats] = useState<UserStats>({
     xp: user?.stats?.xp || 120,
@@ -180,7 +185,10 @@ const App: React.FC = () => {
   }, [userStats, isAuthenticated]);
 
   // -- Handlers --
-  const handleMaterialProcessed = async (newMaterial: StudyMaterial) => {
+  const handleMaterialProcessed = async (
+    newMaterial: StudyMaterial,
+    file?: File,
+  ) => {
     setMaterial(newMaterial);
     setView("dashboard");
     setActiveTab("overview");
@@ -189,7 +197,9 @@ const App: React.FC = () => {
     // Save to backend if authenticated
     if (isAuthenticated) {
       try {
-        const saved = await api.createMaterial(newMaterial);
+        // If there is a file, attach it for multipart upload
+        const payload = file ? { ...newMaterial, file } : newMaterial;
+        const saved = await api.createMaterial(payload);
         setMaterial({
           ...saved,
           id: saved._id,
@@ -250,11 +260,11 @@ const App: React.FC = () => {
   const handleCardUpdate = async (
     id: string,
     status: "new" | "learning" | "mastered",
-    nextReview: number
+    nextReview: number,
   ) => {
     if (!material) return;
     const updatedCards = material.flashcards.map((c) =>
-      c.id === id ? { ...c, status, nextReview } : c
+      c.id === id ? { ...c, status, nextReview } : c,
     );
     setMaterial({ ...material, flashcards: updatedCards });
 
@@ -553,7 +563,9 @@ const App: React.FC = () => {
                 `}
               >
                 <Icon
-                  className={`w-4 h-4 ${isActive ? "text-indigo-300 dark:text-indigo-600" : ""}`}
+                  className={`w-4 h-4 ${
+                    isActive ? "text-indigo-300 dark:text-indigo-600" : ""
+                  }`}
                 />
                 {tab.label}
               </button>
@@ -569,12 +581,7 @@ const App: React.FC = () => {
 
     switch (activeTab) {
       case "stats":
-        return (
-          <StatsDashboard
-            stats={userStats}
-            materialCount={1}
-          />
-        );
+        return <StatsDashboard stats={userStats} materialCount={1} />;
       case "overview":
         return (
           <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6 animate-in slide-in-from-bottom-4 duration-500">
@@ -659,6 +666,31 @@ const App: React.FC = () => {
                 <span className="text-xs font-medium">
                   Створено {new Date(material.createdAt).toLocaleDateString()}
                 </span>
+                {material.file && (
+                  <button
+                    onClick={async () => {
+                      try {
+                        const blob = await api.downloadMaterialFile(
+                          material.id,
+                        );
+                        const url = window.URL.createObjectURL(blob);
+                        const a = document.createElement("a");
+                        a.href = url;
+                        a.download =
+                          material.file?.originalName || "material-file";
+                        document.body.appendChild(a);
+                        a.click();
+                        a.remove();
+                        window.URL.revokeObjectURL(url);
+                      } catch (e) {
+                        console.error("Failed to download file", e);
+                      }
+                    }}
+                    className="mt-2 inline-flex items-center gap-2 px-3 py-2 bg-white dark:bg-slate-700 border rounded-lg text-xs font-medium hover:bg-slate-100"
+                  >
+                    Завантажити оригінал
+                  </button>
+                )}
               </div>
             </div>
 
@@ -727,7 +759,9 @@ const App: React.FC = () => {
       case "glossary":
         return <Glossary items={material.glossary} />;
       case "chat":
-        return <Chat context={material.originalContent} />;
+        return (
+          <Chat context={material.originalContent || ""} chatId={material.id} />
+        );
       default:
         return null;
     }
@@ -749,6 +783,11 @@ const App: React.FC = () => {
             <h2 className="text-3xl md:text-4xl font-heading font-extrabold text-slate-900 dark:text-white truncate max-w-2xl tracking-tight">
               {material.title}
             </h2>
+            {material.file && (
+              <div className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+                Файл: {material.file.originalName}
+              </div>
+            )}
           </div>
           {/* Actions can go here */}
         </div>

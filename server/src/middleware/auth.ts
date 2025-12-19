@@ -10,6 +10,7 @@ if (!JWT_SECRET) {
 
 export interface AuthRequest extends Request {
   userId?: string;
+  user?: any;
 }
 
 export const authMiddleware = (

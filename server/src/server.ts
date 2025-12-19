@@ -74,7 +74,7 @@ app.use(
   cors({
     origin:
       process.env.NODE_ENV === "production"
-        ? ["https://your-production-domain.com"]
+        ? process.env.FRONTEND_URL || "https://examninja-frontend.onrender.com"
         : [
             "http://localhost:5173",
             "http://localhost:5174",

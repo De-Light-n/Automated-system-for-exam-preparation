@@ -1,5 +1,11 @@
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
+console.log("🔧 API Client configured:", {
+  apiUrl: API_URL,
+  env: import.meta.env.MODE,
+  hasViteApiUrl: !!import.meta.env.VITE_API_URL,
+});
+
 interface AuthResponse {
   token: string;
   user: {
@@ -93,18 +99,31 @@ class ApiClient {
 
   private async request<T>(
     endpoint: string,
-    options: RequestInit = {},
+    options: RequestInit = {}
   ): Promise<T> {
-    const response = await fetch(`${API_URL}${endpoint}`, {
+    const url = `${API_URL}${endpoint}`;
+    console.log(`🌐 API Request: ${options.method || "GET"} ${url}`);
+
+    const response = await fetch(url, {
       ...options,
       headers: this.getHeaders(),
     });
 
+    console.log(
+      `📡 API Response: ${response.status} ${response.statusText} for ${endpoint}`
+    );
+
     if (!response.ok) {
-      const error = await response
-        .json()
-        .catch(() => ({ error: "Network error" }));
-      throw new Error(error.error || "Щось пішло не так");
+      let errorText = "";
+      try {
+        const error = await response.json();
+        errorText = error.error || JSON.stringify(error);
+      } catch {
+        errorText = "Network error";
+      }
+
+      console.error(`❌ API Error: ${response.status} ${errorText}`);
+      throw new Error(errorText || "Щось пішло не так");
     }
 
     return response.json();
@@ -114,7 +133,7 @@ class ApiClient {
   async register(
     email: string,
     password: string,
-    username: string,
+    username: string
   ): Promise<AuthResponse> {
     const data = await this.request<AuthResponse>("/auth/register", {
       method: "POST",
@@ -228,14 +247,14 @@ class ApiClient {
     materialId: string,
     cardId: string,
     status: string,
-    nextReview?: number,
+    nextReview?: number
   ): Promise<MaterialResponse> {
     return this.request<MaterialResponse>(
       `/materials/${materialId}/flashcards/${cardId}`,
       {
         method: "PATCH",
         body: JSON.stringify({ status, nextReview }),
-      },
+      }
     );
   }
 
@@ -263,7 +282,7 @@ class ApiClient {
   async addChatMessage(
     materialId: string,
     role: "user" | "model",
-    text: string,
+    text: string
   ): Promise<any> {
     return this.request(`/chat/${materialId}/messages`, {
       method: "POST",

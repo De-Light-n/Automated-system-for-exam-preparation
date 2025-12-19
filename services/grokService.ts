@@ -50,7 +50,7 @@ function truncateText(text: string | undefined, maxChars: number): string {
     truncated.lastIndexOf("."),
     truncated.lastIndexOf("!"),
     truncated.lastIndexOf("?"),
-    truncated.lastIndexOf("\n"),
+    truncated.lastIndexOf("\n")
   );
 
   if (lastSentenceEnd > maxChars * 0.7) {
@@ -67,7 +67,7 @@ function truncateText(text: string | undefined, maxChars: number): string {
 async function withRetry<T>(
   fn: () => Promise<T>,
   retries: number = MAX_RETRIES,
-  delay: number = RETRY_DELAY,
+  delay: number = RETRY_DELAY
 ): Promise<T> {
   let lastError: Error | null = null;
 
@@ -83,8 +83,8 @@ async function withRetry<T>(
         const waitTime = Math.max(retryAfter * 1000, delay * Math.pow(2, i));
         console.warn(
           `⏳ Rate limit 429! Waiting ${(waitTime / 1000).toFixed(
-            1,
-          )}s before retry ${i + 1}/${retries}...`,
+            1
+          )}s before retry ${i + 1}/${retries}...`
         );
 
         if (i < retries - 1) {
@@ -94,12 +94,12 @@ async function withRetry<T>(
         // For other errors, normal backoff
         console.warn(
           `⚠️ Attempt ${i + 1}/${retries} failed:`,
-          error?.message || error,
+          error?.message || error
         );
 
         if (i < retries - 1) {
           await new Promise((resolve) =>
-            setTimeout(resolve, delay * Math.pow(2, i)),
+            setTimeout(resolve, delay * Math.pow(2, i))
           );
         }
       }
@@ -367,7 +367,7 @@ export function parseJsonSafely<T>(text: string): T {
     // Matches sequences of word chars and Cyrillic letters: letters / digits / underscore / hyphen
     tidy = tidy.replace(
       /([\{,]\s*)([A-Za-z0-9_\-\u0400-\u04FF\u00C0-\u024F]+)\s*:/gu,
-      '$1"$2":',
+      '$1"$2":'
     );
 
     try {
@@ -385,7 +385,7 @@ export function parseJsonSafely<T>(text: string): T {
             finalError instanceof Error
               ? finalError.message
               : String(finalError)
-          }; preview: ${preview}`,
+          }; preview: ${preview}`
         );
       }
     }
@@ -412,7 +412,7 @@ function isLikelyUkrainian(text?: string): boolean {
 async function callGroqAPIEnsureUkrainian(
   messages: { role: string; content: string }[],
   temperature: number = 0.6,
-  responseFormat?: { type: string },
+  responseFormat?: { type: string }
 ) {
   const response = await callGroqAPI(messages, temperature, responseFormat);
   const responseObj: any =
@@ -436,7 +436,7 @@ async function callGroqAPIEnsureUkrainian(
   const retryResp = await callGroqAPI(
     retryMessages,
     temperature,
-    responseFormat,
+    responseFormat
   );
   const retryObj: any =
     typeof retryResp === "string" ? { content: retryResp } : retryResp;
@@ -453,7 +453,7 @@ async function callGroqAPIEnsureUkrainian(
 async function callGroqAPI(
   messages: { role: string; content: string }[],
   temperature: number = 0.6,
-  responseFormat?: { type: string },
+  responseFormat?: { type: string }
 ) {
   const requestBody: any = {
     messages,
@@ -471,6 +471,8 @@ async function callGroqAPI(
 
   // Wrap in withRetry to handle rate limits automatically
   return withRetry(async () => {
+    console.log("📡 Fetching from:", GROQ_PROXY_URL);
+
     const response = await fetch(GROQ_PROXY_URL, {
       method: "POST",
       headers: {
@@ -479,10 +481,23 @@ async function callGroqAPI(
       body: JSON.stringify(requestBody),
     });
 
+    console.log("📥 Response received:", {
+      status: response.status,
+      statusText: response.statusText,
+      contentType: response.headers.get("content-type"),
+    });
+
     if (!response.ok) {
-      const errorText = await response.text();
+      let errorText = "";
+      try {
+        errorText = await response.text();
+        console.error("❌ Error response body:", errorText);
+      } catch (readError) {
+        console.error("❌ Failed to read error response:", readError);
+      }
+
       const error: any = new Error(
-        `Groq API error (${response.status}): ${errorText.substring(0, 100)}`,
+        `Groq API error (${response.status}): ${errorText.substring(0, 200)}`
       );
       error.status = response.status;
 
@@ -499,12 +514,38 @@ async function callGroqAPI(
       throw error;
     }
 
-    const data = await response.json();
-    console.log("✅ Groq API response successful");
+    let data;
+    try {
+      const responseText = await response.text();
+      console.log("📄 Response text length:", responseText.length);
+
+      if (!responseText || responseText.trim().length === 0) {
+        throw new Error("Empty response body from server");
+      }
+
+      data = JSON.parse(responseText);
+      console.log("✅ JSON parsed successfully:", {
+        hasChoices: !!data.choices,
+        choicesLength: data.choices?.length,
+      });
+    } catch (jsonError) {
+      console.error("❌ Failed to parse JSON:", jsonError);
+      throw new Error(
+        `Invalid JSON response: ${
+          jsonError instanceof Error ? jsonError.message : String(jsonError)
+        }`
+      );
+    }
 
     if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+      console.error("❌ Invalid response structure:", data);
       throw new Error("Invalid response structure from Groq API");
     }
+
+    console.log(
+      "✅ Groq API response successful, content length:",
+      data.choices[0].message.content.length
+    );
 
     return {
       content: data.choices[0].message.content,
@@ -514,7 +555,7 @@ async function callGroqAPI(
 
 export const processContent = async (
   text: string,
-  title: string,
+  title: string
 ): Promise<Omit<StudyMaterial, "id" | "createdAt">> => {
   // Validate input
   if (!text || text.trim().length === 0) {
@@ -557,7 +598,7 @@ export const processContent = async (
 
     // Use retry logic for reliability
     const responseObj = await withRetry(() =>
-      callGroqAPIEnsureUkrainian(messages, 0.7),
+      callGroqAPIEnsureUkrainian(messages, 0.7)
     );
     console.log("📦 Parsing Groq response...");
 
@@ -581,7 +622,7 @@ export const processContent = async (
     } catch (parseError) {
       console.warn(
         "⚠️ Initial JSON parse failed, attempting to re-prompt model for JSON-only output",
-        parseError instanceof Error ? parseError.message : parseError,
+        parseError instanceof Error ? parseError.message : parseError
       );
       // Try to re-request strict JSON output once
       const rePromptMessages = [
@@ -597,7 +638,7 @@ export const processContent = async (
       try {
         const retryResponse = await callGroqAPIEnsureUkrainian(
           rePromptMessages,
-          0.7,
+          0.7
         );
         const retryText =
           typeof retryResponse === "string"
@@ -614,7 +655,7 @@ export const processContent = async (
         } catch (secondError) {
           console.error(
             "❌ Failed to parse JSON after re-prompt:",
-            secondError instanceof Error ? secondError.message : secondError,
+            secondError instanceof Error ? secondError.message : secondError
           );
           // Provide clearer error message
           const errorMsg =
@@ -642,7 +683,7 @@ export const processContent = async (
     ) {
       console.error(
         "❌ Missing required fields in response:",
-        Object.keys(data),
+        Object.keys(data)
       );
       throw new Error("Incomplete data from AI");
     }
@@ -653,7 +694,7 @@ export const processContent = async (
         question: fc.question,
         answer: fc.answer,
         status: "new" as const,
-      }),
+      })
     );
 
     // Sanitize mindMap to ensure valid structure
@@ -671,16 +712,21 @@ export const processContent = async (
       flashcards: processedFlashcards,
     };
   } catch (error: unknown) {
+    console.error("❌❌❌ Error processing content:", {
+      errorType: error?.constructor?.name,
+      message: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+    });
+
     const errorMessage =
       error instanceof Error ? error.message : "Unknown error";
-    console.error("Error processing content:", errorMessage);
     throw new Error("Failed to process material: " + errorMessage);
   }
 };
 
 export const generateQuiz = async (
   content: string,
-  difficulty: string = "medium",
+  difficulty: string = "medium"
 ): Promise<QuizQuestion[]> => {
   // Validate input
   if (!content || content.trim().length === 0) {
@@ -733,7 +779,7 @@ export const generateQuiz = async (
     } catch (parseError) {
       console.warn(
         "⚠️ Quiz JSON parse failed, attempting to re-prompt model to return strict JSON format",
-        parseError instanceof Error ? parseError.message : parseError,
+        parseError instanceof Error ? parseError.message : parseError
       );
       // Re-prompt for strict JSON
       const rePromptMessages = [
@@ -755,7 +801,7 @@ export const generateQuiz = async (
         } catch (parseError2) {
           console.error(
             "❌ JSON parse error in quiz generation (after retry):",
-            (parseError2 as Error).message,
+            (parseError2 as Error).message
           );
           const response = responseObj as any;
           const preview =
@@ -807,7 +853,7 @@ class GrokChat {
       role: "user" | "model";
       text: string;
       timestamp: number;
-    }[],
+    }[]
   ) {
     const mapped = externalMessages.map((m) => ({
       role: m.role === "model" ? ("assistant" as const) : ("user" as const),
@@ -835,7 +881,7 @@ class GrokChat {
     try {
       const responseObj: any = await callGroqAPIEnsureUkrainian(
         this.conversationHistory,
-        0.7,
+        0.7
       );
       const responseText = responseObj.content;
       const enforcedLanguage = !!responseObj.__enforcedLanguage;
@@ -869,7 +915,7 @@ export const createStudyChat = (context?: string): GrokChat => {
 
 export const explainConcept = async (
   concept: string,
-  context?: string,
+  context?: string
 ): Promise<string> => {
   const contextSnippet = (context || "").substring(0, 5000);
   const messages = [

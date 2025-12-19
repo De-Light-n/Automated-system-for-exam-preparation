@@ -1,6 +1,15 @@
 import { Flashcard, MindMapNode, QuizQuestion, StudyMaterial } from "../types";
 
-const GROQ_PROXY_URL = "/api/openrouter";
+// Use full backend URL for Static Site deployment (relative paths don't work)
+const API_BASE_URL =
+  import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+const GROQ_PROXY_URL = `${API_BASE_URL.replace(/\/api$/, "")}/api/openrouter`;
+
+console.log("🔧 Groq Service configured:", {
+  apiBaseUrl: API_BASE_URL,
+  groqProxyUrl: GROQ_PROXY_URL,
+});
+
 const MAX_RETRIES = 3;
 const RETRY_DELAY = 1000;
 

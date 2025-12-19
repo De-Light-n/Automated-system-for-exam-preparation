@@ -124,17 +124,6 @@ app.get("/api/health", (req, res) => {
   res.json({ status: "ok", message: "Server is running" });
 });
 
-// Serve static frontend files in production
-if (process.env.NODE_ENV === "production") {
-  const publicPath = new URL("../public", import.meta.url).pathname;
-  app.use(express.static(publicPath));
-  
-  // Serve index.html for all non-API routes (SPA fallback)
-  app.get("*", (req, res) => {
-    res.sendFile(new URL("../public/index.html", import.meta.url).pathname);
-  });
-}
-
 // Error handling middleware
 app.use(
   (
@@ -153,12 +142,10 @@ app.use(
   }
 );
 
-// 404 handler for API routes only (in development)
-if (process.env.NODE_ENV !== "production") {
-  app.use((req, res) => {
-    res.status(404).json({ error: "Маршрут не знайдено" });
-  });
-}
+// 404 handler for API routes
+app.use((req, res) => {
+  res.status(404).json({ error: "Маршрут не знайдено" });
+});
 
 // Start server
 const startServer = async () => {

@@ -32,24 +32,28 @@ const rateLimitStore = new Map<string, { count: number; resetTime: number }>();
 const RATE_LIMIT_WINDOW = 60 * 1000; // 1 minute
 const RATE_LIMIT_MAX = 100; // 100 requests per minute
 
-const rateLimiter = (req: express.Request, res: express.Response, next: express.NextFunction) => {
+const rateLimiter = (
+  req: express.Request,
+  res: express.Response,
+  next: express.NextFunction
+) => {
   const ip = req.ip || req.socket.remoteAddress || "unknown";
   const now = Date.now();
-  
+
   const record = rateLimitStore.get(ip);
-  
+
   if (!record || now > record.resetTime) {
     rateLimitStore.set(ip, { count: 1, resetTime: now + RATE_LIMIT_WINDOW });
     return next();
   }
-  
+
   if (record.count >= RATE_LIMIT_MAX) {
-    return res.status(429).json({ 
+    return res.status(429).json({
       error: "Забагато запитів. Спробуйте пізніше.",
-      retryAfter: Math.ceil((record.resetTime - now) / 1000)
+      retryAfter: Math.ceil((record.resetTime - now) / 1000),
     });
   }
-  
+
   record.count++;
   next();
 };
@@ -66,10 +70,13 @@ setInterval(() => {
 
 // Middleware
 app.use(rateLimiter);
-app.use(helmet({
-  contentSecurityPolicy: process.env.NODE_ENV === "production" ? undefined : false,
-  crossOriginEmbedderPolicy: false,
-}));
+app.use(
+  helmet({
+    contentSecurityPolicy:
+      process.env.NODE_ENV === "production" ? undefined : false,
+    crossOriginEmbedderPolicy: false,
+  })
+);
 app.use(
   cors({
     origin:

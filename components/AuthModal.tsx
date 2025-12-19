@@ -159,8 +159,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onClose }) => {
         <button
           onClick={() => {
             const API_URL =
-              import.meta.env.VITE_API_URL || "http://localhost:5000/api";
-            window.location.href = `${API_URL}/auth/google`;
+              import.meta.env.VITE_API_URL || "http://localhost:5000";
+            window.location.href = `${API_URL}/api/auth/google`;
           }}
           className="w-full bg-white dark:bg-slate-700 border-2 border-slate-200 dark:border-slate-600 text-slate-700 dark:text-white py-3 rounded-xl font-semibold hover:bg-slate-50 dark:hover:bg-slate-600 hover:border-slate-300 dark:hover:border-slate-500 transition-all flex items-center justify-center gap-3"
         >

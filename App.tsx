@@ -61,14 +61,6 @@ import {
 } from "lucide-react";
 import { api } from "./services/apiClient";
 
-// Окремий компонент для OAuth callback
-const AuthCallbackRoute: React.FC = () => {
-  if (window.location.pathname === "/auth/callback") {
-    return <AuthCallback />;
-  }
-  return null;
-};
-
 const App: React.FC = () => {
   const {
     user,
@@ -81,8 +73,9 @@ const App: React.FC = () => {
   // -- State --
   const [view, setView] = useState<ViewMode>("home");
 
-  // Handle OAuth callback
-  const isAuthCallback = window.location.pathname === "/auth/callback";
+  // Handle OAuth callback via query params
+  const urlParams = new URLSearchParams(window.location.search);
+  const isAuthCallback = urlParams.get("auth") === "callback";
 
   // Early return for auth callback (after all hooks)
   if (isAuthCallback) {
@@ -92,7 +85,7 @@ const App: React.FC = () => {
   const [material, setMaterial] = useState<StudyMaterial | null>(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [resumeQuizId, setResumeQuizId] = useState<string | undefined>(
-    undefined,
+    undefined
   );
   const [userStats, setUserStats] = useState<UserStats>({
     xp: user?.stats?.xp || 120,
@@ -189,7 +182,7 @@ const App: React.FC = () => {
   // -- Handlers --
   const handleMaterialProcessed = async (
     newMaterial: StudyMaterial,
-    file?: File,
+    file?: File
   ) => {
     setMaterial(newMaterial);
     setView("dashboard");
@@ -262,11 +255,11 @@ const App: React.FC = () => {
   const handleCardUpdate = async (
     id: string,
     status: "new" | "learning" | "mastered",
-    nextReview: number,
+    nextReview: number
   ) => {
     if (!material) return;
     const updatedCards = material.flashcards.map((c) =>
-      c.id === id ? { ...c, status, nextReview } : c,
+      c.id === id ? { ...c, status, nextReview } : c
     );
     setMaterial({ ...material, flashcards: updatedCards });
 
@@ -685,7 +678,7 @@ const App: React.FC = () => {
                     onClick={async () => {
                       try {
                         const blob = await api.downloadMaterialFile(
-                          material.id,
+                          material.id
                         );
                         const url = window.URL.createObjectURL(blob);
                         const a = document.createElement("a");

@@ -72,7 +72,7 @@ router.post(
       console.error("Register error:", error);
       res.status(500).json({ error: "Помилка при реєстрації" });
     }
-  },
+  }
 );
 
 // Login
@@ -115,7 +115,7 @@ router.post(
       console.error("Login error:", error);
       res.status(500).json({ error: "Помилка при вході" });
     }
-  },
+  }
 );
 
 // Get Profile (protected route)
@@ -145,7 +145,7 @@ router.get(
   passport.authenticate("google", {
     scope: ["profile", "email"],
     session: false,
-  }),
+  })
 );
 
 // Google OAuth - Callback
@@ -160,14 +160,14 @@ router.get(
       const user = req.user;
       const token = generateToken(user._id.toString());
 
-      // Redirect to frontend with token
+      // Redirect to frontend with token (use root path for static site)
       const frontendURL = process.env.FRONTEND_URL || "http://localhost:3000";
-      res.redirect(`${frontendURL}/auth/callback?token=${token}`);
+      res.redirect(`${frontendURL}/?auth=callback&token=${token}`);
     } catch (error) {
       console.error("Google callback error:", error);
-      res.redirect("/login?error=auth_failed");
+      res.redirect("/?error=auth_failed");
     }
-  },
+  }
 );
 
 export default router;

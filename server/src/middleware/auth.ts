@@ -22,12 +22,12 @@ export const authMiddleware = (
     if (!JWT_SECRET) {
       return res.status(500).json({ error: "Помилка конфігурації сервера" });
     }
-
+    
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
       return res.status(401).json({ error: "Токен не надано" });
     }
-
+    
     const token = authHeader.split(" ")[1];
 
     if (!token) {
